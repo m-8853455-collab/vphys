@@ -1,145 +1,91 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>VPhys – The Virtual Physics Lab</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            background-color: #f4f6f8;
-        }
-        header {
-            background-color: #1e3a8a;
-            color: white;
-            padding: 20px;
-            text-align: center;
-        }
-        section {
-            background: white;
-            margin: 20px;
-            padding: 20px;
-            border-radius: 8px;
-        }
-        h2 {
-            color: #1e3a8a;
-        }
-        button {
-            padding: 10px 15px;
-            margin: 5px;
-            background-color: #1e3a8a;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #16307a;
-        }
-        footer {
-            background-color: #1e3a8a;
-            color: white;
-            text-align: center;
-            padding: 10px;
-        }
-    </style>
+<meta charset="UTF-8">
+<title>VPhys – Projectile Motion Simulator</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f4f6f8;
+}
+header {
+    background: #1e3a8a;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+section {
+    background: white;
+    margin: 20px;
+    padding: 20px;
+    border-radius: 8px;
+}
+h2 {
+    color: #1e3a8a;
+}
+button {
+    padding: 10px 15px;
+    background: #1e3a8a;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+canvas {
+    border: 1px solid black;
+    touch-action: none;
+}
+</style>
 </head>
 
 <body>
 
 <header>
-    <h1>VPhys</h1>
-    <p>The Virtual Physics Lab</p>
+<h1>VPhys</h1>
+<p>Interactive Projectile Motion Simulator</p>
 </header>
 
 <section>
-    <h2>About VPhys</h2>
-    <p>
-        VPhys is an interactive virtual physics lab designed to help students understand
-        physics concepts through simulations, experimentation, and real-time feedback.
-    </p>
+<h2>Projectile Motion</h2>
+
+<p>Initial speed u (m/s):</p>
+<input type="number" id="u" value="20">
+
+<p>Launch angle θ (degrees):</p>
+<input type="number" id="theta" value="45">
+
+<p>Platform height (m):</p>
+<input type="number" id="platformH" value="0">
+
+<p>Environment:</p>
+<select id="env">
+    <option value="9.8">Earth</option>
+    <option value="1.62">Moon</option>
+</select>
+
+<br><br>
+<button onclick="launch()">Launch</button>
+
+<br><br>
+<canvas id="sim" width="600" height="300"></canvas>
+
+<p><strong>Real-time data (drag the red point):</strong></p>
+<p>x = <span id="px">–</span> m</p>
+<p>y = <span id="py">–</span> m</p>
+<p>Resultant velocity v = <span id="vr">–</span> m/s</p>
 </section>
 
-<section>
-    <h2>Advanced Projectile Motion – VPhys</h2>
-
-    <p>Initial speed, u (m/s):</p>
-    <input type="number" id="u" value="20">
-
-    <p>Angle, θ (degrees):</p>
-    <input type="number" id="theta" value="45">
-
-    <p>Environment:</p>
-    <select id="env">
-        <option value="9.8">Earth</option>
-        <option value="1.62">Moon</option>
-    </select>
-
-    <br><br>
-    <button onclick="launch()">Launch</button>
-
-    <canvas id="sim" width="500" height="300"
-        style="border:1px solid black; touch-action:none;"></canvas>
-
-    <p><strong>Real-time data (drag the red point):</strong></p>
-    <p>x = <span id="px">–</span> m</p>
-    <p>y = <span id="py">–</span> m</p>
-    <p>Resultant velocity, v = <span id="vr">–</span> m/s</p>
-</section>
-
-<section>
-    <h2>Why Choose VPhys?</h2>
-    <ul>
-        <li>Interactive and visual learning</li>
-        <li>Improves conceptual understanding</li>
-        <li>Reduces physics anxiety</li>
-        <li>Student-centred learning approach</li>
-    </ul>
-</section>
-
-<section>
-    <h2>Force Simulator – VPhys</h2>
-
-    <p>Mass (kg):</p>
-    <input type="number" id="mass" value="2">
-
-    <p>Force applied (N):</p>
-    <input type="number" id="force" value="10"><br><br>
-
-    <button onclick="calculateForce()">Calculate</button>
-
-    <p>Acceleration, a = <span id="acc">–</span> m/s²</p>
-</section>
-
-<section>
-    <h2>Electricity Simulator – VPhys</h2>
-
-    <p>Voltage (V):</p>
-    <input type="number" id="voltage" value="12">
-
-    <p>Resistance (Ω):</p>
-    <input type="number" id="resistance" value="6"><br><br>
-
-    <button onclick="calculateCurrent()">Calculate</button>
-
-    <p>Current, I = <span id="current">–</span> A</p>
-</section>
-
-<section>
-    <h2>Contact Us</h2>
-    <p>Group Name: VPhys</p>
-    <p>Email: vphys@gmail.com</p>
-</section>
-
-<footer>
-    <p>&copy; 2026 VPhys – The Virtual Physics Lab</p>
+<footer style="background:#1e3a8a;color:white;text-align:center;padding:10px;">
+&copy; 2026 VPhys
 </footer>
 
 <script>
 const canvas = document.getElementById("sim");
 const ctx = canvas.getContext("2d");
-const platformY = canvas.height - 20;
 
+let platformY = canvas.height - 20;
 let path = [];
 let dragging = false;
 let dragIndex = 0;
@@ -148,14 +94,20 @@ function launch() {
     const u = Number(document.getElementById("u").value);
     const theta = Number(document.getElementById("theta").value) * Math.PI / 180;
     const g = Number(document.getElementById("env").value);
+    const h = Number(document.getElementById("platformH").value);
+
+    platformY = canvas.height - 20 - h * 5;
 
     const ux = u * Math.cos(theta);
     const uy = u * Math.sin(theta);
 
     path = [];
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    for (let t = 0; t < 10; t += 0.05) {
+    // Start ON the platform
+    path.push({ x:0, y:0, ux, uy, t:0 });
+
+    for (let t=0.05; t<10; t+=0.05) {
         const x = ux * t;
         const y = uy * t - 0.5 * g * t * t;
         if (y < 0) break;
@@ -166,71 +118,75 @@ function launch() {
 }
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
     // platform
     ctx.fillRect(0, platformY, canvas.width, 5);
 
-    // trajectory
+    // trajectory dots
     ctx.fillStyle = "black";
-    path.forEach(p => {
+    path.forEach(p=>{
         ctx.beginPath();
-        ctx.arc(p.x * 5, platformY - p.y * 5, 2, 0, Math.PI * 2);
+        ctx.arc(p.x*5, platformY - p.y*5, 2, 0, Math.PI*2);
         ctx.fill();
     });
 
-    // draggable point
     const p = path[dragIndex];
+
+    // ball
     ctx.fillStyle = "red";
     ctx.beginPath();
-    ctx.arc(p.x * 5, platformY - p.y * 5, 6, 0, Math.PI * 2);
+    ctx.arc(p.x*5, platformY - p.y*5, 6, 0, Math.PI*2);
     ctx.fill();
+
+    // velocity vectors
+    const g = Number(document.getElementById("env").value);
+    const vy = p.uy - g * p.t;
+
+    // Vx (blue)
+    ctx.strokeStyle = "blue";
+    ctx.beginPath();
+    ctx.moveTo(p.x*5, platformY - p.y*5);
+    ctx.lineTo(p.x*5 + p.ux*2, platformY - p.y*5);
+    ctx.stroke();
+
+    // Vy (green)
+    ctx.strokeStyle = "green";
+    ctx.beginPath();
+    ctx.moveTo(p.x*5, platformY - p.y*5);
+    ctx.lineTo(p.x*5, platformY - p.y*5 - vy*2);
+    ctx.stroke();
 
     updateData(p);
 }
 
 function updateData(p) {
     const g = Number(document.getElementById("env").value);
-    const vy = p.uy - g * p.t;
-    const vr = Math.sqrt(p.ux * p.ux + vy * vy);
+    const vy = p.uy - g*p.t;
+    const vr = Math.sqrt(p.ux*p.ux + vy*vy);
 
     document.getElementById("px").innerText = p.x.toFixed(2);
     document.getElementById("py").innerText = p.y.toFixed(2);
     document.getElementById("vr").innerText = vr.toFixed(2);
 }
 
-canvas.addEventListener("pointerdown", () => dragging = true);
-canvas.addEventListener("pointerup", () => dragging = false);
+canvas.addEventListener("pointerdown", ()=> dragging=true);
+canvas.addEventListener("pointerup", ()=> dragging=false);
 
-canvas.addEventListener("pointermove", (e) => {
+canvas.addEventListener("pointermove", (e)=>{
     if (!dragging) return;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / 5;
+    const x = (e.clientX - rect.left)/5;
 
     let closest = 0;
-    path.forEach((p, i) => {
-        if (Math.abs(p.x - x) < Math.abs(path[closest].x - x)) {
+    path.forEach((p,i)=>{
+        if (Math.abs(p.x-x) < Math.abs(path[closest].x-x)) {
             closest = i;
         }
     });
-
     dragIndex = closest;
     draw();
 });
-
-function calculateForce() {
-    const m = Number(document.getElementById("mass").value);
-    const F = Number(document.getElementById("force").value);
-    const a = F / m;
-    document.getElementById("acc").innerText = a.toFixed(2);
-}
-
-function calculateCurrent() {
-    const V = Number(document.getElementById("voltage").value);
-    const R = Number(document.getElementById("resistance").value);
-    const I = V / R;
-    document.getElementById("current").innerText = I.toFixed(2);
-}
 </script>
 
 </body>
