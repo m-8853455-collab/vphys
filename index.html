@@ -7,7 +7,7 @@
 <style>
 body { font-family: Arial, sans-serif; margin:0; background:#eef2f7; }
 header { background:#1e3a8a; color:white; padding:20px; text-align:center; }
-.container { display:flex; gap:20px; margin:20px; flex-wrap:wrap; }
+.container { display:flex; gap:20px; margin:20px; }
 section { background:white; padding:20px; border-radius:8px; }
 .controls { width:340px; }
 canvas { border:1px solid black; background:#e6f7fb; touch-action:none; }
@@ -35,7 +35,6 @@ footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 <p>The Virtual Physics Lab</p>
 </header>
 
-<!-- ================= PROJECTILE MOTION (SAFE & FIXED) ================= -->
 <div class="container">
 
 <section>
@@ -86,30 +85,21 @@ footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 
 </div>
 
-<!-- ================= WORK–ENERGY THEOREM ================= -->
 <section>
-<h2>Work–Energy Theorem (Spring–Block)</h2>
-<p><b>W = ΔKE</b></p>
+<h2>Work–Energy Theorem</h2>
+<p><b>W = F s cosθ = ΔKE</b></p>
 
-<div style="display:flex; gap:20px; flex-wrap:wrap;">
-<div>
-<p>Force F = <span id="weF">0</span> N</p>
-<p>Displacement x = <span id="weX">0</span> m</p>
-<p>Velocity v = <span id="weV">0</span> m/s</p>
-<p>Kinetic Energy KE = <span id="weKE">0</span> J</p>
-<p>Work Done W = <span id="weW">0</span> J</p>
-</div>
+<p>Force (N)</p><input id="weForce" value="10">
+<p>Displacement (m)</p><input id="weDisplacement" value="5">
+<p>Angle (°)</p><input id="weAngle" value="0">
+<p>Initial velocity (m/s)</p><input id="weU" value="0">
+<p>Mass (kg)</p><input id="weMass" value="2">
 
-<div>
-<p>Mass (kg)</p><input id="weMass" value="1">
-<p>Spring constant k (N/m)</p><input id="weK" value="40">
-<p>Initial stretch x₀ (m)</p><input id="weX0" value="0.25">
-<button onclick="startWE()">▶ Start</button>
-</div>
-</div>
+<button onclick="calculateWorkEnergy()">Calculate</button>
 
-<canvas id="weCanvas" width="520" height="220"
-style="border:1px solid black; background:#f9fbff; margin-top:10px;"></canvas>
+<p>Work = <span id="weWork">–</span> J</p>
+<p>KE initial = <span id="weKEi">–</span> J</p>
+<p>KE final = <span id="weKEf">–</span> J</p>
 </section>
 
 <footer>© 2026 VPhys – The Virtual Physics Lab</footer>
@@ -121,127 +111,121 @@ const ctx = canvas.getContext("2d");
 const groundY = canvas.height - 20;
 let scale = 5;
 
-let path=[], dragIndex=0, dragging=false, animIndex=0, animating=false;
+let path = [];
+let dragIndex = 0;
+let dragging = false;
+let animIndex = 0;
+let animating = false;
 
-/* ZOOM (CLAMPED) */
-function zoomIn(){ scale = Math.min(scale*1.2, 20); draw(); }
-function zoomOut(){ scale = Math.max(scale/1.2, 1); draw(); }
+/* ---------- ZOOM ---------- */
+function zoomIn(){ scale *= 1.2; draw(); }
+function zoomOut(){ scale /= 1.2; draw(); }
 
-/* START */
-function launch(){
-  scale = 5;  // 🔒 FIX: always reset zoom
+/* ---------- START ---------- */
+function launch() {
+  const u = +document.getElementById("u").value;
+  const theta = +document.getElementById("theta").value * Math.PI/180;
+  const g = +document.getElementById("env").value;
+  const h = +document.getElementById("platformH").value;
 
-  const u=+u.value, th=+theta.value*Math.PI/180;
-  const g=+env.value, h=+platformH.value;
-  const ux=u*Math.cos(th), uy=u*Math.sin(th);
+  const ux = u * Math.cos(theta);
+  const uy = u * Math.sin(theta);
 
-  path=[{x:0,y:h,ux,uy,t:0}];
+  path = [{x:0, y:h, ux, uy, t:0}];
   for(let t=0.05;t<30;t+=0.05){
-    const x=ux*t, y=h+uy*t-0.5*g*t*t;
-    if(y<0) break;
+    const x = ux*t;
+    const y = h + uy*t - 0.5*g*t*t;
+    if(y < 0) break;
     path.push({x,y,ux,uy,t});
   }
 
-  dragIndex=0; animIndex=0; animating=true; dragging=false;
+  dragIndex = 0;
+  animIndex = 0;
+  animating = true;
+  dragging = false;
   animate();
 }
 
-/* ANIMATION */
+/* ---------- ANIMATION ---------- */
 function animate(){
   if(!animating) return;
-  dragIndex=animIndex; draw();
-  if(++animIndex>=path.length){ animating=false; dragging=true; }
+  dragIndex = animIndex;
+  draw();
+  animIndex++;
+  if(animIndex >= path.length){
+    animating = false;
+    dragging = true;
+    return;
+  }
   requestAnimationFrame(animate);
 }
 
-/* DRAW */
+/* ---------- DRAW ---------- */
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  ctx.fillStyle="blue";
-  ctx.fillRect(0,groundY,canvas.width,5);
+  // ground
+  ctx.fillStyle = "blue";
+  ctx.fillRect(0, groundY, canvas.width, 5);
 
   if(path.length){
-    const py=groundY-path[0].y*scale;
-    ctx.fillRect(0,py,80,5);
+    const platformY = groundY - path[0].y * scale;
+    ctx.fillRect(0, platformY, 80, 5);
   }
 
-  ctx.fillStyle="black";
+  // trajectory
+  ctx.fillStyle = "black";
   path.forEach(p=>{
     ctx.beginPath();
-    ctx.arc(p.x*scale,groundY-p.y*scale,2,0,Math.PI*2);
+    ctx.arc(p.x*scale, groundY - p.y*scale, 2, 0, Math.PI*2);
     ctx.fill();
   });
 
   if(!path.length) return;
-  const p=path[dragIndex];
-  ctx.fillStyle="red";
+  const p = path[dragIndex];
+
+  // ball
+  ctx.fillStyle = "red";
   ctx.beginPath();
-  ctx.arc(p.x*scale,groundY-p.y*scale,6,0,Math.PI*2);
+  ctx.arc(p.x*scale, groundY - p.y*scale, 6, 0, Math.PI*2);
   ctx.fill();
 
-  const vy=p.uy-(+env.value)*p.t;
-  time.textContent=p.t.toFixed(2);
-  sx.textContent=p.x.toFixed(2);
-  sy.textContent=p.y.toFixed(2);
-  vx.textContent=p.ux.toFixed(2);
-  document.getElementById("vy").textContent=vy.toFixed(2);
-  vr.textContent=Math.sqrt(p.ux*p.ux+vy*vy).toFixed(2);
+  const g = +document.getElementById("env").value;
+  const vy = p.uy - g*p.t;
+
+  document.getElementById("time").textContent = p.t.toFixed(2);
+  document.getElementById("sx").textContent = p.x.toFixed(2);
+  document.getElementById("sy").textContent = p.y.toFixed(2);
+  document.getElementById("vx").textContent = p.ux.toFixed(2);
+  document.getElementById("vy").textContent = vy.toFixed(2);
+  document.getElementById("vr").textContent =
+    Math.sqrt(p.ux*p.ux + vy*vy).toFixed(2);
 }
 
-/* DRAG */
-canvas.addEventListener("pointerdown",()=>{ if(!animating) dragging=true; });
-canvas.addEventListener("pointerup",()=>dragging=false);
-canvas.addEventListener("pointermove",e=>{
+/* ---------- DRAG ---------- */
+canvas.addEventListener("pointerdown", ()=>{ if(!animating) dragging=true; });
+canvas.addEventListener("pointerup", ()=> dragging=false);
+canvas.addEventListener("pointermove", e=>{
   if(!dragging) return;
-  const x=(e.clientX-canvas.getBoundingClientRect().left)/scale;
-  let c=0;
-  path.forEach((p,i)=>{ if(Math.abs(p.x-x)<Math.abs(path[c].x-x)) c=i; });
-  dragIndex=c; draw();
+  const x = (e.clientX - canvas.getBoundingClientRect().left)/scale;
+  let closest = 0;
+  path.forEach((p,i)=>{
+    if(Math.abs(p.x-x) < Math.abs(path[closest].x-x)) closest=i;
+  });
+  dragIndex = closest;
+  draw();
 });
 
-/* WORK–ENERGY */
-const weCanvas=document.getElementById("weCanvas");
-const wectx=weCanvas.getContext("2d");
-let x=0,v=0,m=1,k=40,dt=0.02;
-
-function startWE(){
-  m=+weMass.value; k=+weK.value;
-  x=+weX0.value; v=0;
-  requestAnimationFrame(updateWE);
-}
-
-function updateWE(){
-  const F=-k*x, a=F/m;
-  v+=a*dt; x+=v*dt;
-
-  const KE=0.5*m*v*v;
-  weF.textContent=F.toFixed(2);
-  weX.textContent=x.toFixed(3);
-  weV.textContent=v.toFixed(2);
-  weKE.textContent=KE.toFixed(2);
-  weW.textContent=KE.toFixed(2);
-
-  drawWE(F,KE);
-  requestAnimationFrame(updateWE);
-}
-
-function drawWE(F,KE){
-  wectx.clearRect(0,0,weCanvas.width,weCanvas.height);
-  const baseY=130, bx=160+x*200;
-
-  wectx.fillRect(30,70,10,120);
-  wectx.beginPath(); wectx.moveTo(40,baseY); wectx.lineTo(bx,baseY); wectx.stroke();
-  wectx.fillRect(bx,baseY-20,40,40);
-
-  wectx.strokeStyle="red";
-  wectx.beginPath(); wectx.moveTo(bx+20,baseY-30); wectx.lineTo(bx+20+F*1.5,baseY-30); wectx.stroke();
-
-  wectx.strokeStyle="blue";
-  wectx.beginPath(); wectx.moveTo(bx+20,baseY+40); wectx.lineTo(bx+20+v*30,baseY+40); wectx.stroke();
-
-  wectx.fillStyle="green";
-  wectx.fillRect(430,180-KE*6,25,KE*6);
+/* ---------- WORK–ENERGY ---------- */
+function calculateWorkEnergy(){
+  const F=+weForce.value, s=+weDisplacement.value;
+  const th=+weAngle.value*Math.PI/180;
+  const u=+weU.value, m=+weMass.value;
+  const W=F*s*Math.cos(th);
+  const KEi=0.5*m*u*u;
+  weWork.textContent=W.toFixed(2);
+  weKEi.textContent=KEi.toFixed(2);
+  weKEf.textContent=(KEi+W).toFixed(2);
 }
 </script>
 
