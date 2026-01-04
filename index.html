@@ -27,24 +27,22 @@ section {
     border-radius: 8px;
 }
 .controls {
-    width: 260px;
+    width: 300px;
 }
 canvas {
     border: 1px solid black;
     background: #e6f7fb;
     touch-action: none;
 }
+h2, h3 {
+    color: #1e3a8a;
+}
 button {
     padding: 8px 12px;
-    margin-top: 10px;
     background: #1e3a8a;
     color: white;
     border: none;
     border-radius: 5px;
-    cursor: pointer;
-}
-h2, h3 {
-    color: #1e3a8a;
 }
 footer {
     background: #1e3a8a;
@@ -70,7 +68,7 @@ footer {
 </section>
 
 <section class="controls">
-<h3>Projectile Data</h3>
+<h3>Projectile Information</h3>
 
 <p>Platform Height (m): <span id="ph">–</span></p>
 <p>Initial Velocity u (m/s): <span id="uVal">–</span></p>
@@ -87,7 +85,7 @@ footer {
 <p>Initial speed u:</p>
 <input type="number" id="u" value="20">
 
-<p>Angle θ:</p>
+<p>Launch angle θ:</p>
 <input type="number" id="theta" value="45">
 
 <p>Platform height:</p>
@@ -98,9 +96,6 @@ footer {
     <option value="9.8">Earth</option>
     <option value="1.62">Moon</option>
 </select>
-
-<br>
-<button onclick="launch()">Launch</button>
 </section>
 
 </div>
@@ -111,8 +106,7 @@ footer {
 <p>Mass (kg):</p>
 <input type="number" id="mass" value="2">
 <p>Force (N):</p>
-<input type="number" id="force" value="10">
-<br>
+<input type="number" id="force" value="10"><br><br>
 <button onclick="calculateForce()">Calculate</button>
 <p>Acceleration a = <span id="acc">–</span> m/s²</p>
 </section>
@@ -123,8 +117,7 @@ footer {
 <p>Voltage (V):</p>
 <input type="number" id="voltage" value="12">
 <p>Resistance (Ω):</p>
-<input type="number" id="resistance" value="6">
-<br>
+<input type="number" id="resistance" value="6"><br><br>
 <button onclick="calculateCurrent()">Calculate</button>
 <p>Current I = <span id="current">–</span> A</p>
 </section>
@@ -139,9 +132,12 @@ const ctx = canvas.getContext("2d");
 
 let platformY = canvas.height - 20;
 let path = [];
-let dragging = false;
 let dragIndex = 0;
+let dragging = false;
+let animIndex = 0;
+let animating = false;
 
+/* ---------- LAUNCH & CALCULATE ---------- */
 function launch() {
     const u = Number(document.getElementById("u").value);
     const thetaDeg = Number(document.getElementById("theta").value);
@@ -155,8 +151,6 @@ function launch() {
     const uy = u * Math.sin(theta);
 
     path = [];
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
     path.push({ x:0, y:0, ux, uy, t:0 });
 
     for (let t=0.05; t<20; t+=0.05) {
@@ -166,7 +160,6 @@ function launch() {
         path.push({ x, y, ux, uy, t });
     }
 
-    // physics values
     const T = (2 * uy) / g;
     const R = ux * T;
     const H = (uy * uy) / (2 * g);
@@ -177,13 +170,33 @@ function launch() {
     document.getElementById("range").innerText = R.toFixed(2);
     document.getElementById("maxH").innerText = H.toFixed(2);
     document.getElementById("vx").innerText = ux.toFixed(2);
-    document.getElementById("envVal").innerText =
-        g === 9.8 ? "Earth" : "Moon";
+    document.getElementById("envVal").innerText = g === 9.8 ? "Earth" : "Moon";
 
     dragIndex = 0;
-    draw();
+    animIndex = 0;
+    animating = true;
+    dragging = false;
+    animate();
 }
 
+/* ---------- ANIMATION ---------- */
+function animate() {
+    if (!animating) return;
+
+    dragIndex = animIndex;
+    draw();
+
+    animIndex++;
+    if (animIndex >= path.length) {
+        animating = false;
+        dragging = true; // enable dragging AFTER motion
+        return;
+    }
+
+    requestAnimationFrame(animate);
+}
+
+/* ---------- DRAW ---------- */
 function draw() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -211,8 +224,12 @@ function draw() {
     document.getElementById("vr").innerText = vr.toFixed(2);
 }
 
-canvas.addEventListener("pointerdown", ()=> dragging=true);
-canvas.addEventListener("pointerup", ()=> dragging=false);
+/* ---------- DRAG AFTER MOTION ---------- */
+canvas.addEventListener("pointerdown", ()=>{
+    if (!animating) dragging = true;
+});
+canvas.addEventListener("pointerup", ()=> dragging = false);
+
 canvas.addEventListener("pointermove", e=>{
     if (!dragging) return;
     const rect = canvas.getBoundingClientRect();
@@ -226,12 +243,19 @@ canvas.addEventListener("pointermove", e=>{
     draw();
 });
 
+/* ---------- AUTO RUN ---------- */
+["u","theta","platformH","env"].forEach(id=>{
+    document.getElementById(id).addEventListener("input", launch);
+});
+
+/* ---------- FORCE ---------- */
 function calculateForce() {
     const m = Number(document.getElementById("mass").value);
     const F = Number(document.getElementById("force").value);
     document.getElementById("acc").innerText = (F/m).toFixed(2);
 }
 
+/* ---------- ELECTRICITY ---------- */
 function calculateCurrent() {
     const V = Number(document.getElementById("voltage").value);
     const R = Number(document.getElementById("resistance").value);
