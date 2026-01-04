@@ -37,6 +37,7 @@ footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 
 <div class="container">
 
+<!-- ===== PROJECTILE MOTION ===== -->
 <section>
 <canvas id="sim" width="600" height="350"></canvas>
 
@@ -85,24 +86,9 @@ footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 
 </div>
 
-<section>
-<h2>Work–Energy Theorem</h2>
-<p><b>W = F s cosθ = ΔKE</b></p>
-
-<p>Force (N)</p><input id="weForce" value="10">
-<p>Displacement (m)</p><input id="weDisplacement" value="5">
-<p>Angle (°)</p><input id="weAngle" value="0">
-<p>Initial velocity (m/s)</p><input id="weU" value="0">
-<p>Mass (kg)</p><input id="weMass" value="2">
-
-<button onclick="calculateWorkEnergy()">Calculate</button>
-
-<p>Work = <span id="weWork">–</span> J</p>
-<p>KE initial = <span id="weKEi">–</span> J</p>
-<p>KE final = <span id="weKEf">–</span> J</p>
-</section>
-
-<footer>© 2026 VPhys – The Virtual Physics Lab</footer>
+<footer>
+© 2026 VPhys – The Virtual Physics Lab
+</footer>
 
 <script>
 const canvas = document.getElementById("sim");
@@ -164,7 +150,6 @@ function animate(){
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
 
-  // ground
   ctx.fillStyle = "blue";
   ctx.fillRect(0, groundY, canvas.width, 5);
 
@@ -173,7 +158,6 @@ function draw(){
     ctx.fillRect(0, platformY, 80, 5);
   }
 
-  // trajectory
   ctx.fillStyle = "black";
   path.forEach(p=>{
     ctx.beginPath();
@@ -184,7 +168,6 @@ function draw(){
   if(!path.length) return;
   const p = path[dragIndex];
 
-  // ball
   ctx.fillStyle = "red";
   ctx.beginPath();
   ctx.arc(p.x*scale, groundY - p.y*scale, 6, 0, Math.PI*2);
@@ -215,18 +198,6 @@ canvas.addEventListener("pointermove", e=>{
   dragIndex = closest;
   draw();
 });
-
-/* ---------- WORK–ENERGY ---------- */
-function calculateWorkEnergy(){
-  const F=+weForce.value, s=+weDisplacement.value;
-  const th=+weAngle.value*Math.PI/180;
-  const u=+weU.value, m=+weMass.value;
-  const W=F*s*Math.cos(th);
-  const KEi=0.5*m*u*u;
-  weWork.textContent=W.toFixed(2);
-  weKEi.textContent=KEi.toFixed(2);
-  weKEf.textContent=(KEi+W).toFixed(2);
-}
 </script>
 
 </body>
