@@ -133,6 +133,8 @@
         const g = 9.8;
 
         let t = 0;
+        let trail = [];
+
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         const interval = setInterval(() => {
@@ -143,8 +145,21 @@
 
             if (y < 0) {
                 clearInterval(interval);
+                return;
             }
 
+            trail.push({ x: x * 5, y: canvas.height - y * 5 });
+
+            // dotted path
+            ctx.fillStyle = "black";
+            trail.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // moving ball
+            ctx.fillStyle = "red";
             ctx.beginPath();
             ctx.arc(x * 5, canvas.height - y * 5, 5, 0, Math.PI * 2);
             ctx.fill();
