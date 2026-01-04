@@ -2,56 +2,32 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>VPhys – The Virtual Physics Lab</title>
+<title>VPhys – Virtual Physics Lab</title>
 
 <style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background: #eef2f7;
+body { font-family: Arial, sans-serif; background:#eef2f7; margin:0; }
+header { background:#1e3a8a; color:white; text-align:center; padding:20px; }
+.container { display:flex; gap:20px; margin:20px; }
+section { background:white; padding:20px; border-radius:8px; }
+.controls { width:340px; }
+canvas { border:1px solid black; background:#e6f7fb; }
+label { font-weight:bold; }
+input, select {
+    width:100%;
+    padding:6px;
+    margin-bottom:8px;
 }
-header {
-    background: #1e3a8a;
-    color: white;
-    padding: 20px;
-    text-align: center;
-}
-.container {
-    display: flex;
-    gap: 20px;
-    margin: 20px;
-}
-section {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-}
-.controls {
-    width: 300px;
-}
-canvas {
-    border: 1px solid black;
-    background: #e6f7fb;
-    touch-action: none;
-}
-h2, h3 {
-    color: #1e3a8a;
+.readonly {
+    background:#f0f0f0;
 }
 button {
-    padding: 8px 14px;
-    background: #1e3a8a;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    margin-top: 10px;
-    cursor: pointer;
+    background:#1e3a8a;
+    color:white;
+    border:none;
+    padding:10px;
+    cursor:pointer;
 }
-footer {
-    background: #1e3a8a;
-    color: white;
-    text-align: center;
-    padding: 10px;
-}
+footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 </style>
 </head>
 
@@ -59,10 +35,9 @@ footer {
 
 <header>
 <h1>VPhys</h1>
-<p>The Virtual Physics Lab</p>
+<p>Projectile Motion – Known & Unknown Data</p>
 </header>
 
-<!-- ================= PROJECTILE MOTION ================= -->
 <div class="container">
 
 <section>
@@ -70,61 +45,56 @@ footer {
 </section>
 
 <section class="controls">
-<h3>Projectile Information</h3>
 
-<p>Platform Height (m): <span id="ph">–</span></p>
-<p>Initial Velocity u (m/s): <span id="uVal">–</span></p>
-<p>Launch Angle θ (°): <span id="thetaVal">–</span></p>
-<p>Horizontal Range (m): <span id="range">–</span></p>
-<p>Maximum Height (m): <span id="maxH">–</span></p>
-<p>Vx (m/s): <span id="vx">–</span></p>
-<p>Vy (m/s): <span id="vy">–</span></p>
-<p>Resultant Velocity (m/s): <span id="vr">–</span></p>
-<p>Environment: <span id="envVal">–</span></p>
+<h3>Known (Input) Data</h3>
 
-<hr>
-
-<p>Initial speed u:</p>
+<label>Initial speed u (m/s)</label>
 <input type="number" id="u" value="20">
 
-<p>Launch angle θ:</p>
+<label>Launch angle θ (°)</label>
 <input type="number" id="theta" value="45">
 
-<p>Platform height:</p>
+<label>Platform height h (m)</label>
 <input type="number" id="platformH" value="5">
 
-<p>Environment:</p>
+<label>Environment</label>
 <select id="env">
     <option value="9.8">Earth</option>
     <option value="1.62">Moon</option>
 </select>
 
 <button onclick="launch()">▶ Start</button>
-</section>
 
+<hr>
+
+<h3>Calculated (Unknown) Data</h3>
+
+<label>Time t (s)</label>
+<input class="readonly" id="time" readonly>
+
+<label>Sx (m)</label>
+<input class="readonly" id="sx" readonly>
+
+<label>Sy (m)</label>
+<input class="readonly" id="sy" readonly>
+
+<label>Vx (m/s)</label>
+<input class="readonly" id="vx" readonly>
+
+<label>Vy (m/s)</label>
+<input class="readonly" id="vy" readonly>
+
+<label>Resultant velocity v (m/s)</label>
+<input class="readonly" id="vr" readonly>
+
+<label>Horizontal range (m)</label>
+<input class="readonly" id="range" readonly>
+
+<label>Maximum height (m)</label>
+<input class="readonly" id="maxH" readonly>
+
+</section>
 </div>
-
-<!-- ================= FORCE ================= -->
-<section>
-<h2>Force Simulator (F = ma)</h2>
-<p>Mass (kg):</p>
-<input type="number" id="mass" value="2">
-<p>Force (N):</p>
-<input type="number" id="force" value="10"><br><br>
-<button onclick="calculateForce()">Calculate</button>
-<p>Acceleration a = <span id="acc">–</span> m/s²</p>
-</section>
-
-<!-- ================= ELECTRICITY ================= -->
-<section>
-<h2>Electricity Simulator (V = IR)</h2>
-<p>Voltage (V):</p>
-<input type="number" id="voltage" value="12">
-<p>Resistance (Ω):</p>
-<input type="number" id="resistance" value="6"><br><br>
-<button onclick="calculateCurrent()">Calculate</button>
-<p>Current I = <span id="current">–</span> A</p>
-</section>
 
 <footer>
 &copy; 2026 VPhys – The Virtual Physics Lab
@@ -134,138 +104,75 @@ footer {
 const canvas = document.getElementById("sim");
 const ctx = canvas.getContext("2d");
 
-const groundY = canvas.height - 20;   // landing ground
-let platformY = groundY;              // launch platform height
-
+const groundY = canvas.height - 20;
 let path = [];
 let dragIndex = 0;
-let dragging = false;
 let animIndex = 0;
 let animating = false;
 
-/* ---------- START ---------- */
 function launch() {
-    const u = Number(document.getElementById("u").value);
-    const thetaDeg = Number(document.getElementById("theta").value);
+    const u = +uInput.value;
+    const thetaDeg = +thetaInput.value;
+    const h = +platformH.value;
+    const g = +env.value;
+
     const theta = thetaDeg * Math.PI / 180;
-    const g = Number(document.getElementById("env").value);
-    const h = Number(document.getElementById("platformH").value);
-
-    platformY = groundY - h * 5;
-
     const ux = u * Math.cos(theta);
     const uy = u * Math.sin(theta);
 
-    path = [];
-    path.push({ x:0, y:h, ux, uy, t:0 });
+    path = [{x:0, y:h, ux, uy, t:0}];
 
-    for (let t=0.05; t<20; t+=0.05) {
-        const x = ux * t;
-        const y = h + uy * t - 0.5 * g * t * t;
-        if (y < 0) break; // hit ground
-        path.push({ x, y, ux, uy, t });
+    for (let t=0.05; t<30; t+=0.05) {
+        const x = ux*t;
+        const y = h + uy*t - 0.5*g*t*t;
+        if (y < 0) break;
+        path.push({x,y,ux,uy,t});
     }
 
     const T = (uy + Math.sqrt(uy*uy + 2*g*h)) / g;
-    const R = ux * T;
-    const H = h + (uy*uy) / (2*g);
+    range.value = (ux*T).toFixed(2);
+    maxH.value = (h + uy*uy/(2*g)).toFixed(2);
+    vx.value = ux.toFixed(2);
 
-    document.getElementById("ph").innerText = h.toFixed(2);
-    document.getElementById("uVal").innerText = u.toFixed(2);
-    document.getElementById("thetaVal").innerText = thetaDeg.toFixed(2);
-    document.getElementById("range").innerText = R.toFixed(2);
-    document.getElementById("maxH").innerText = H.toFixed(2);
-    document.getElementById("vx").innerText = ux.toFixed(2);
-    document.getElementById("envVal").innerText = g === 9.8 ? "Earth" : "Moon";
-
-    dragIndex = 0;
     animIndex = 0;
     animating = true;
-    dragging = false;
     animate();
 }
 
-/* ---------- ANIMATION ---------- */
 function animate() {
     if (!animating) return;
-
     dragIndex = animIndex;
     draw();
-
     animIndex++;
-    if (animIndex >= path.length) {
-        animating = false;
-        dragging = true;
-        return;
-    }
+    if (animIndex >= path.length) animating = false;
     requestAnimationFrame(animate);
 }
 
-/* ---------- DRAW ---------- */
 function draw() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    // landing ground
     ctx.fillRect(0, groundY, canvas.width, 5);
 
-    // launch platform (small)
-    ctx.fillRect(0, platformY, 80, 5);
-
-    // trajectory
-    ctx.fillStyle = "black";
-    path.forEach(p=>{
-        ctx.beginPath();
-        ctx.arc(p.x*5, groundY - p.y*5, 2, 0, Math.PI*2);
-        ctx.fill();
-    });
-
     const p = path[dragIndex];
-
-    // ball
-    ctx.fillStyle = "red";
     ctx.beginPath();
     ctx.arc(p.x*5, groundY - p.y*5, 6, 0, Math.PI*2);
+    ctx.fillStyle="red";
     ctx.fill();
 
-    const g = Number(document.getElementById("env").value);
-    const vy = p.uy - g*p.t;
-    const vr = Math.sqrt(p.ux*p.ux + vy*vy);
+    const g = +env.value;
+    const vyNow = p.uy - g*p.t;
 
-    document.getElementById("vy").innerText = vy.toFixed(2);
-    document.getElementById("vr").innerText = vr.toFixed(2);
+    time.value = p.t.toFixed(2);
+    sx.value = p.x.toFixed(2);
+    sy.value = p.y.toFixed(2);
+    vy.value = vyNow.toFixed(2);
+    vr.value = Math.sqrt(p.ux*p.ux + vyNow*vyNow).toFixed(2);
 }
 
-/* ---------- DRAG AFTER LANDING ---------- */
-canvas.addEventListener("pointerdown", ()=>{
-    if (!animating) dragging = true;
-});
-canvas.addEventListener("pointerup", ()=> dragging=false);
-canvas.addEventListener("pointermove", e=>{
-    if (!dragging) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left)/5;
-
-    let closest = 0;
-    path.forEach((p,i)=>{
-        if (Math.abs(p.x-x) < Math.abs(path[closest].x-x)) closest = i;
-    });
-    dragIndex = closest;
-    draw();
-});
-
-/* ---------- FORCE ---------- */
-function calculateForce() {
-    const m = Number(document.getElementById("mass").value);
-    const F = Number(document.getElementById("force").value);
-    document.getElementById("acc").innerText = (F/m).toFixed(2);
-}
-
-/* ---------- ELECTRICITY ---------- */
-function calculateCurrent() {
-    const V = Number(document.getElementById("voltage").value);
-    const R = Number(document.getElementById("resistance").value);
-    document.getElementById("current").innerText = (V/R).toFixed(2);
-}
+// input references
+const uInput = document.getElementById("u");
+const thetaInput = document.getElementById("theta");
+const platformH = document.getElementById("platformH");
+const env = document.getElementById("env");
 </script>
 
 </body>
