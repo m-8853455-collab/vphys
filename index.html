@@ -5,74 +5,25 @@
 <title>VPhys – The Virtual Physics Lab</title>
 
 <style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background: #eef2f7;
-}
-header {
-    background: #1e3a8a;
-    color: white;
-    padding: 20px;
-    text-align: center;
-}
-.container {
-    display: flex;
-    gap: 20px;
-    margin: 20px;
-}
-section {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-}
-.controls {
-    width: 340px;
-}
-canvas {
-    border: 1px solid black;
-    background: #e6f7fb;
-    touch-action: none;
-}
-h2, h3 {
-    color: #1e3a8a;
-}
+body { font-family: Arial, sans-serif; margin:0; background:#eef2f7; }
+header { background:#1e3a8a; color:white; padding:20px; text-align:center; }
+.container { display:flex; gap:20px; margin:20px; }
+section { background:white; padding:20px; border-radius:8px; }
+.controls { width:340px; }
+canvas { border:1px solid black; background:#e6f7fb; touch-action:none; }
 button {
-    padding: 8px 14px;
-    background: #1e3a8a;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    margin-top: 10px;
-    cursor: pointer;
+  padding:8px 14px; background:#1e3a8a; color:white;
+  border:none; border-radius:5px; margin-top:6px; cursor:pointer;
 }
-footer {
-    background: #1e3a8a;
-    color: white;
-    text-align: center;
-    padding: 10px;
-}
+footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 
 /* formula table */
-.formula-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
+.formula-table { width:100%; border-collapse:collapse; margin-top:15px; }
+.formula-table th, .formula-table td {
+  border:1px solid #333; padding:8px; text-align:center;
 }
-.formula-table th,
-.formula-table td {
-    border: 1px solid #333;
-    padding: 8px;
-    text-align: center;
-}
-.formula-table th {
-    background: #1e3a8a;
-    color: white;
-}
-.formula-table td {
-    font-family: "Courier New", monospace;
-    font-size: 14px;
-}
+.formula-table th { background:#1e3a8a; color:white; }
+.formula-table td { font-family:"Courier New", monospace; font-size:14px; }
 </style>
 </head>
 
@@ -83,7 +34,6 @@ footer {
 <p>The Virtual Physics Lab</p>
 </header>
 
-<!-- ================= PROJECTILE MOTION (UNCHANGED) ================= -->
 <div class="container">
 
 <section>
@@ -91,31 +41,12 @@ footer {
 
 <h3>Projectile Motion Formula Reference</h3>
 <table class="formula-table">
-<tr>
-<th>x-axis (Horizontal)</th>
-<th>y-axis (Vertical)</th>
-</tr>
-<tr>
-<td>aₓ = 0</td>
-<td>aᵧ = −g</td>
-</tr>
-<tr>
-<td>Vₓ = uₓ</td>
-<td>Vᵧ = uᵧ − gt</td>
-</tr>
-<tr>
-<td>Sₓ = uₓt</td>
-<td>Sᵧ = uᵧt − ½gt²</td>
-</tr>
-<tr>
-<td>Sₓ = ½(uₓ + Vₓ)t</td>
-<td>Sᵧ = ½(uᵧ + Vᵧ)t</td>
-</tr>
+<tr><th>x-axis</th><th>y-axis</th></tr>
+<tr><td>aₓ = 0</td><td>aᵧ = −g</td></tr>
+<tr><td>Vₓ = uₓ</td><td>Vᵧ = uᵧ − gt</td></tr>
+<tr><td>Sₓ = uₓt</td><td>Sᵧ = uᵧt − ½gt²</td></tr>
+<tr><td>Sₓ = ½(uₓ+Vₓ)t</td><td>Sᵧ = ½(uᵧ+Vᵧ)t</td></tr>
 </table>
-
-<p style="font-size:13px;color:#555;">
-<i>Horizontal and vertical motions are analysed independently.</i>
-</p>
 </section>
 
 <section class="controls">
@@ -132,11 +63,13 @@ footer {
 
 <p>Environment</p>
 <select id="env">
-    <option value="9.8">Earth</option>
-    <option value="1.62">Moon</option>
+  <option value="9.8">Earth</option>
+  <option value="1.62">Moon</option>
 </select>
 
 <button onclick="launch()">▶ Start</button>
+<button onclick="zoomIn()">➕ Zoom In</button>
+<button onclick="zoomOut()">➖ Zoom Out</button>
 
 <hr>
 
@@ -151,208 +84,104 @@ footer {
 
 </div>
 
-<!-- ================= WORK–ENERGY THEOREM (NEW) ================= -->
 <section>
-<h2>Work–Energy Theorem Simulation</h2>
+<h2>Work–Energy Theorem</h2>
+<p>W = F s cosθ = ΔKE</p>
 
-<p>
-The work–energy theorem states that the net work done on an object
-is equal to the change in its kinetic energy.
-</p>
-
-<p style="font-family:Courier New;">
-W = F × s × cosθ = ΔKE
-</p>
-
-<hr>
-
-<p>Force, F (N):</p>
-<input type="number" id="weForce" value="10">
-
-<p>Displacement, s (m):</p>
-<input type="number" id="weDisplacement" value="5">
-
-<p>Angle between force and motion, θ (°):</p>
-<input type="number" id="weAngle" value="0">
-
-<p>Initial velocity, u (m/s):</p>
-<input type="number" id="weU" value="0">
-
-<p>Mass, m (kg):</p>
-<input type="number" id="weMass" value="2">
+<p>Force (N)</p><input id="weForce" value="10">
+<p>Displacement (m)</p><input id="weDisplacement" value="5">
+<p>Angle (°)</p><input id="weAngle" value="0">
+<p>Initial velocity (m/s)</p><input id="weU" value="0">
+<p>Mass (kg)</p><input id="weMass" value="2">
 
 <button onclick="calculateWorkEnergy()">Calculate</button>
 
-<hr>
-
-<p>Work done, W = <span id="weWork">–</span> J</p>
-<p>Initial kinetic energy = <span id="weKEi">–</span> J</p>
-<p>Final kinetic energy = <span id="weKEf">–</span> J</p>
-
-<canvas id="weCanvas" width="400" height="160"
-        style="border:1px solid black; background:#f9fbff; margin-top:10px;">
-</canvas>
-
-<h3>Concept Notes</h3>
-<ul>
-<li>Positive work increases kinetic energy</li>
-<li>Zero work does not change kinetic energy</li>
-<li>Negative work decreases kinetic energy</li>
-</ul>
+<p>Work = <span id="weWork">–</span> J</p>
+<p>KE initial = <span id="weKEi">–</span> J</p>
+<p>KE final = <span id="weKEf">–</span> J</p>
 </section>
 
-<footer>
-&copy; 2026 VPhys – The Virtual Physics Lab
-</footer>
+<footer>© 2026 VPhys – The Virtual Physics Lab</footer>
 
-<!-- ================= ORIGINAL PROJECTILE JS (UNCHANGED) ================= -->
 <script>
-const canvas = document.getElementById("sim");
-const ctx = canvas.getContext("2d");
+const canvas=document.getElementById("sim");
+const ctx=canvas.getContext("2d");
 
-const groundY = canvas.height - 20;
-let platformY = groundY;
+const groundY=canvas.height-20;
+let scale=5, platformY=groundY;
+let path=[], dragIndex=0, dragging=false, animIndex=0, animating=false;
 
-let path = [];
-let dragIndex = 0;
-let dragging = false;
-let animIndex = 0;
-let animating = false;
+function zoomIn(){ scale*=1.2; draw(); }
+function zoomOut(){ scale/=1.2; draw(); }
 
-function launch() {
-    const u = Number(document.getElementById("u").value);
-    const thetaDeg = Number(document.getElementById("theta").value);
-    const theta = thetaDeg * Math.PI / 180;
-    const g = Number(document.getElementById("env").value);
-    const h = Number(document.getElementById("platformH").value);
+function launch(){
+  const u=+u.value, th=+theta.value*Math.PI/180;
+  const g=+env.value, h=+platformH.value;
+  const ux=u*Math.cos(th), uy=u*Math.sin(th);
 
-    platformY = groundY - h * 5;
-
-    const ux = u * Math.cos(theta);
-    const uy = u * Math.sin(theta);
-
-    path = [];
-    path.push({ x:0, y:h, ux, uy, t:0 });
-
-    for (let t=0.05; t<30; t+=0.05) {
-        const x = ux * t;
-        const y = h + uy * t - 0.5 * g * t * t;
-        if (y < 0) break;
-        path.push({ x, y, ux, uy, t });
-    }
-
-    dragIndex = 0;
-    animIndex = 0;
-    animating = true;
-    dragging = false;
-    animate();
+  platformY=groundY-h*scale;
+  path=[{x:0,y:h,ux,uy,t:0}];
+  for(let t=0.05;t<30;t+=0.05){
+    const x=ux*t, y=h+uy*t-0.5*g*t*t;
+    if(y<0) break;
+    path.push({x,y,ux,uy,t});
+  }
+  animIndex=0; animating=true; dragging=false; animate();
 }
 
-function animate() {
-    if (!animating) return;
-    dragIndex = animIndex;
-    draw();
-    animIndex++;
-    if (animIndex >= path.length) {
-        animating = false;
-        dragging = true;
-        return;
-    }
-    requestAnimationFrame(animate);
+function animate(){
+  if(!animating) return;
+  dragIndex=animIndex; draw();
+  if(++animIndex>=path.length){ animating=false; dragging=true; }
+  requestAnimationFrame(animate);
 }
 
-function draw() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="blue";
+  ctx.fillRect(0,groundY,canvas.width,5);
+  ctx.fillRect(0,platformY,80,5);
 
-    ctx.fillStyle = "blue";
-    ctx.fillRect(0, groundY, canvas.width, 5);
-    ctx.fillRect(0, platformY, 80, 5);
-
-    ctx.fillStyle = "black";
-    path.forEach(p=>{
-        ctx.beginPath();
-        ctx.arc(p.x*5, groundY - p.y*5, 2, 0, Math.PI*2);
-        ctx.fill();
-    });
-
-    if (!path.length) return;
-    const p = path[dragIndex];
-
-    ctx.fillStyle = "red";
+  ctx.fillStyle="black";
+  path.forEach(p=>{
     ctx.beginPath();
-    ctx.arc(p.x*5, groundY - p.y*5, 6, 0, Math.PI*2);
+    ctx.arc(p.x*scale,groundY-p.y*scale,2,0,Math.PI*2);
     ctx.fill();
+  });
 
-    const g = Number(document.getElementById("env").value);
-    const vy = p.uy - g*p.t;
-    const vr = Math.sqrt(p.ux*p.ux + vy*vy);
+  if(!path.length) return;
+  const p=path[dragIndex];
+  ctx.fillStyle="red";
+  ctx.beginPath();
+  ctx.arc(p.x*scale,groundY-p.y*scale,6,0,Math.PI*2);
+  ctx.fill();
 
-    document.getElementById("time").innerText = p.t.toFixed(2);
-    document.getElementById("sx").innerText = p.x.toFixed(2);
-    document.getElementById("sy").innerText = p.y.toFixed(2);
-    document.getElementById("vx").innerText = p.ux.toFixed(2);
-    document.getElementById("vy").innerText = vy.toFixed(2);
-    document.getElementById("vr").innerText = vr.toFixed(2);
+  const vy=p.uy-(+env.value)*p.t;
+  time.textContent=p.t.toFixed(2);
+  sx.textContent=p.x.toFixed(2);
+  sy.textContent=p.y.toFixed(2);
+  vx.textContent=p.ux.toFixed(2);
+  vySpan=vy.toFixed(2); document.getElementById("vy").textContent=vySpan;
+  vr.textContent=Math.sqrt(p.ux*p.ux+vy*vy).toFixed(2);
 }
 
-canvas.addEventListener("pointerdown", ()=>{ if (!animating) dragging=true; });
-canvas.addEventListener("pointerup", ()=> dragging=false);
-canvas.addEventListener("pointermove", e=>{
-    if (!dragging) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left)/5;
-    let closest = 0;
-    path.forEach((p,i)=>{
-        if (Math.abs(p.x-x) < Math.abs(path[closest].x-x)) closest=i;
-    });
-    dragIndex = closest;
-    draw();
+canvas.addEventListener("pointerdown",()=>{ if(!animating) dragging=true; });
+canvas.addEventListener("pointerup",()=>dragging=false);
+canvas.addEventListener("pointermove",e=>{
+  if(!dragging) return;
+  const x=(e.clientX-canvas.getBoundingClientRect().left)/scale;
+  let c=0; path.forEach((p,i)=>{ if(Math.abs(p.x-x)<Math.abs(path[c].x-x)) c=i; });
+  dragIndex=c; draw();
 });
-</script>
 
-<!-- ================= WORK–ENERGY JS (NEW) ================= -->
-<script>
-function calculateWorkEnergy() {
-    const F = +document.getElementById("weForce").value;
-    const s = +document.getElementById("weDisplacement").value;
-    const theta = +document.getElementById("weAngle").value * Math.PI/180;
-    const u = +document.getElementById("weU").value;
-    const m = +document.getElementById("weMass").value;
-
-    const W = F * s * Math.cos(theta);
-    const KEi = 0.5 * m * u * u;
-    const KEf = KEi + W;
-
-    document.getElementById("weWork").innerText = W.toFixed(2);
-    document.getElementById("weKEi").innerText = KEi.toFixed(2);
-    document.getElementById("weKEf").innerText = KEf.toFixed(2);
-
-    drawWE(theta);
-}
-
-function drawWE(theta) {
-    const c = document.getElementById("weCanvas");
-    const ctx = c.getContext("2d");
-    ctx.clearRect(0,0,c.width,c.height);
-
-    ctx.fillStyle="#555";
-    ctx.fillRect(60,90,50,30);
-
-    ctx.strokeStyle="blue";
-    ctx.beginPath();
-    ctx.moveTo(110,105);
-    ctx.lineTo(320,105);
-    ctx.stroke();
-    ctx.fillText("Displacement",200,95);
-
-    ctx.strokeStyle="red";
-    const fx = 70*Math.cos(theta);
-    const fy = -70*Math.sin(theta);
-    ctx.beginPath();
-    ctx.moveTo(85,90);
-    ctx.lineTo(85+fx,90+fy);
-    ctx.stroke();
-    ctx.fillText("Force",85+fx+5,90+fy);
+function calculateWorkEnergy(){
+  const F=+weForce.value, s=+weDisplacement.value;
+  const th=+weAngle.value*Math.PI/180;
+  const u=+weU.value, m=+weMass.value;
+  const W=F*s*Math.cos(th), KEi=0.5*m*u*u, KEf=KEi+W;
+  weWork.textContent=W.toFixed(2);
+  weKEi.textContent=KEi.toFixed(2);
+  weKEf.textContent=KEf.toFixed(2);
 }
 </script>
 
