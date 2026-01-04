@@ -35,6 +35,7 @@ footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 <p>The Virtual Physics Lab</p>
 </header>
 
+<!-- ================= PROJECTILE MOTION (UNCHANGED) ================= -->
 <div class="container">
 
 <section>
@@ -85,9 +86,9 @@ footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 
 </div>
 
-<!-- ================= WORK–ENERGY THEOREM (IMPROVED) ================= -->
+<!-- ================= WORK–ENERGY THEOREM (IMPROVED ONLY) ================= -->
 <section>
-<h2>Work–Energy Theorem Simulation (Spring–Block)</h2>
+<h2>Work–Energy Theorem Simulation (Spring–Block System)</h2>
 
 <p style="font-family:Courier New;">
 W = ΔKE = ½mv² − ½mu²
@@ -95,85 +96,180 @@ W = ΔKE = ½mv² − ½mu²
 
 <div style="display:flex; gap:20px; flex-wrap:wrap;">
 
-<!-- ===== DISPLAY PANEL ===== -->
-<div style="min-width:220px;">
-<h3>Real-time Values</h3>
-<p>Force, F = <span id="weF">0</span> N</p>
-<p>Displacement, x = <span id="weX">0</span> m</p>
-<p>Work done, W = <span id="weW">0</span> J</p>
-<p>Kinetic Energy, KE = <span id="weKE">0</span> J</p>
-<p>Velocity, v = <span id="weV">0</span> m/s</p>
+<div>
+<h3>Real-time Display</h3>
+<p>Force F = <span id="weF">0</span> N</p>
+<p>Displacement x = <span id="weX">0</span> m</p>
+<p>Velocity v = <span id="weV">0</span> m/s</p>
+<p>Kinetic Energy KE = <span id="weKE">0</span> J</p>
+<p>Work Done W = <span id="weW">0</span> J</p>
 </div>
 
-<!-- ===== CONTROLS ===== -->
-<div style="min-width:220px;">
+<div>
 <h3>Parameters</h3>
-
 <p>Mass (kg)</p>
-<input id="weMass" type="number" value="1">
+<input id="weMass" value="1">
 
 <p>Spring constant k (N/m)</p>
-<input id="weK" type="number" value="50">
+<input id="weK" value="40">
 
 <p>Initial stretch x₀ (m)</p>
-<input id="weX0" type="number" value="0.2">
+<input id="weX0" value="0.25">
 
 <button onclick="startWE()">▶ Start</button>
 </div>
 
 </div>
 
-<canvas id="weCanvas" width="500" height="200"
-        style="border:1px solid black; background:#f9fbff; margin-top:15px;">
+<canvas id="weCanvas" width="520" height="220"
+style="border:1px solid black; background:#f9fbff; margin-top:15px;">
 </canvas>
 
 <p style="font-size:13px;color:#555;">
-Drag-and-release spring–block system demonstrating the Work–Energy Theorem.
+Spring–block system demonstrating the Work–Energy Theorem with real-time force,
+velocity vectors, kinetic energy bar, and displacement trail.
 </p>
 </section>
 
+<footer>© 2026 VPhys – The Virtual Physics Lab</footer>
+
+<!-- ================= PROJECTILE MOTION JS (UNCHANGED) ================= -->
+<script>
+const canvas = document.getElementById("sim");
+const ctx = canvas.getContext("2d");
+
+const groundY = canvas.height - 20;
+let scale = 5;
+
+let path = [];
+let dragIndex = 0;
+let dragging = false;
+let animIndex = 0;
+let animating = false;
+
+function zoomIn(){ scale *= 1.2; draw(); }
+function zoomOut(){ scale /= 1.2; draw(); }
+
+function launch() {
+  const u = +u.value;
+  const theta = +theta.value * Math.PI/180;
+  const g = +env.value;
+  const h = +platformH.value;
+
+  const ux = u * Math.cos(theta);
+  const uy = u * Math.sin(theta);
+
+  path = [{x:0, y:h, ux, uy, t:0}];
+  for(let t=0.05;t<30;t+=0.05){
+    const x = ux*t;
+    const y = h + uy*t - 0.5*g*t*t;
+    if(y < 0) break;
+    path.push({x,y,ux,uy,t});
+  }
+
+  dragIndex = 0;
+  animIndex = 0;
+  animating = true;
+  dragging = false;
+  animate();
+}
+
+function animate(){
+  if(!animating) return;
+  dragIndex = animIndex;
+  draw();
+  animIndex++;
+  if(animIndex >= path.length){
+    animating = false;
+    dragging = true;
+    return;
+  }
+  requestAnimationFrame(animate);
+}
+
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  ctx.fillStyle = "blue";
+  ctx.fillRect(0, groundY, canvas.width, 5);
+
+  if(path.length){
+    const platformY = groundY - path[0].y * scale;
+    ctx.fillRect(0, platformY, 80, 5);
+  }
+
+  ctx.fillStyle = "black";
+  path.forEach(p=>{
+    ctx.beginPath();
+    ctx.arc(p.x*scale, groundY - p.y*scale, 2, 0, Math.PI*2);
+    ctx.fill();
+  });
+
+  if(!path.length) return;
+  const p = path[dragIndex];
+
+  ctx.fillStyle = "red";
+  ctx.beginPath();
+  ctx.arc(p.x*scale, groundY - p.y*scale, 6, 0, Math.PI*2);
+  ctx.fill();
+
+  const vy = p.uy - (+env.value)*p.t;
+  time.textContent = p.t.toFixed(2);
+  sx.textContent = p.x.toFixed(2);
+  sy.textContent = p.y.toFixed(2);
+  vx.textContent = p.ux.toFixed(2);
+  vySpan = vy.toFixed(2); document.getElementById("vy").textContent = vySpan;
+  vr.textContent = Math.sqrt(p.ux*p.ux + vy*vy).toFixed(2);
+}
+
+canvas.addEventListener("pointerdown",()=>{ if(!animating) dragging=true; });
+canvas.addEventListener("pointerup",()=>dragging=false);
+canvas.addEventListener("pointermove",e=>{
+  if(!dragging) return;
+  const x=(e.clientX-canvas.getBoundingClientRect().left)/scale;
+  let c=0;
+  path.forEach((p,i)=>{
+    if(Math.abs(p.x-x)<Math.abs(path[c].x-x)) c=i;
+  });
+  dragIndex=c; draw();
+});
+</script>
+
+<!-- ================= WORK–ENERGY JS (NEW, ISOLATED) ================= -->
 <script>
 const weCanvas = document.getElementById("weCanvas");
 const wectx = weCanvas.getContext("2d");
 
-let weRunning = false;
-let x, v, m, k;
-let x0;
-const dt = 0.02;
-const scaleWE = 200; // visual scale
+let x=0, v=0, m=1, k=40;
+let trail=[]; const dt=0.02, scaleWE=200;
 
 function startWE(){
-  m = +weMass.value;
-  k = +weK.value;
-  x0 = +weX0.value;
-
-  x = x0;
-  v = 0;
-  weRunning = true;
+  m=+weMass.value;
+  k=+weK.value;
+  x=+weX0.value;
+  v=0;
+  trail=[];
   requestAnimationFrame(updateWE);
 }
 
 function updateWE(){
-  if(!weRunning) return;
-
-  // Spring force
   const F = -k * x;
   const a = F / m;
 
-  // Update motion (simple Euler)
   v += a * dt;
   x += v * dt;
 
-  // Energies
   const KE = 0.5 * m * v * v;
-  const W = KE; // ΔKE (u = 0)
+  const W = KE;
 
-  // Display values
   weF.textContent = F.toFixed(2);
   weX.textContent = x.toFixed(3);
   weV.textContent = v.toFixed(2);
   weKE.textContent = KE.toFixed(2);
   weW.textContent = W.toFixed(2);
+
+  trail.push(x);
+  if(trail.length > 60) trail.shift();
 
   drawWE(F, KE);
   requestAnimationFrame(updateWE);
@@ -182,41 +278,54 @@ function updateWE(){
 function drawWE(F, KE){
   wectx.clearRect(0,0,weCanvas.width,weCanvas.height);
 
-  const baseY = 120;
-  const blockX = 150 + x * scaleWE;
+  const baseY=130;
+  const blockX=160 + x*scaleWE;
 
-  // Wall
-  wectx.fillStyle = "#333";
-  wectx.fillRect(20,80,10,80);
+  // wall
+  wectx.fillStyle="#333";
+  wectx.fillRect(30,70,10,120);
 
-  // Spring
-  wectx.strokeStyle = "#666";
+  // trail
+  wectx.strokeStyle="#ccc";
   wectx.beginPath();
-  wectx.moveTo(30,120);
-  wectx.lineTo(blockX,120);
+  trail.forEach((tx,i)=>{
+    const px=160+tx*scaleWE;
+    if(i===0) wectx.moveTo(px,baseY);
+    else wectx.lineTo(px,baseY);
+  });
   wectx.stroke();
 
-  // Block
-  wectx.fillStyle = "#555";
-  wectx.fillRect(blockX,100,40,40);
-
-  // Force vector
-  wectx.strokeStyle = "red";
+  // spring
+  wectx.strokeStyle="#666";
   wectx.beginPath();
-  wectx.moveTo(blockX+20,95);
-  wectx.lineTo(blockX+20 + F*2,95);
+  wectx.moveTo(40,baseY);
+  wectx.lineTo(blockX,baseY);
   wectx.stroke();
 
-  // Velocity vector
-  wectx.strokeStyle = "blue";
+  // block
+  wectx.fillStyle="#555";
+  wectx.fillRect(blockX,baseY-20,40,40);
+
+  // force vector
+  wectx.strokeStyle="red";
   wectx.beginPath();
-  wectx.moveTo(blockX+20,150);
-  wectx.lineTo(blockX+20 + v*30,150);
+  wectx.moveTo(blockX+20,baseY-30);
+  wectx.lineTo(blockX+20+F*1.5,baseY-30);
+  wectx.stroke();
+
+  // velocity vector
+  wectx.strokeStyle="blue";
+  wectx.beginPath();
+  wectx.moveTo(blockX+20,baseY+40);
+  wectx.lineTo(blockX+20+v*30,baseY+40);
   wectx.stroke();
 
   // KE bar
-  wectx.fillStyle = "green";
-  wectx.fillRect(350,150-KE*5,30,KE*5);
-  wectx.fillText("KE",345,160);
+  wectx.fillStyle="green";
+  wectx.fillRect(430,180-KE*6,25,KE*6);
+  wectx.fillText("KE",428,195);
 }
 </script>
+
+</body>
+</html>
