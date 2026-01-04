@@ -2,144 +2,162 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Spring–Mass Energy Simulator | VPhys</title>
+<title>Spring–Mass Work–Energy Simulator | VPhys</title>
 
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background: #eef2f7;
-  }
-  header {
-    background: #1e3a8a;
-    color: white;
-    text-align: center;
-    padding: 15px;
-  }
-  section {
-    background: white;
-    margin: 15px auto;
-    padding: 15px;
-    width: 90%;
-    border-radius: 8px;
-  }
-  label {
-    font-weight: bold;
-  }
-  input, select, button {
-    margin: 5px 0;
-    padding: 5px;
-  }
-  canvas {
-    border: 1px solid black;
-    display: block;
-    margin: 10px auto;
-  }
-  .energy-bar {
-    height: 18px;
-    background: #ddd;
-    margin: 5px 0;
-    position: relative;
-  }
-  .fill {
-    height: 100%;
-  }
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  background: #eef2f7;
+}
+header, footer {
+  background: #1e3a8a;
+  color: white;
+  text-align: center;
+  padding: 15px;
+}
+section {
+  background: white;
+  margin: 15px auto;
+  padding: 15px;
+  width: 90%;
+  border-radius: 8px;
+}
+label {
+  font-weight: bold;
+}
+input, select, button {
+  padding: 5px;
+  margin: 5px 0;
+}
+canvas {
+  border: 1px solid black;
+  display: block;
+  margin: 10px auto;
+}
+.energy-bar {
+  height: 18px;
+  background: #ddd;
+  margin: 6px 0;
+}
+.fill {
+  height: 100%;
+}
+.hint {
+  background: #f1f5ff;
+  padding: 10px;
+  border-left: 4px solid #1e3a8a;
+}
 </style>
 </head>
 
 <body>
 
 <header>
-  <h1>Spring–Mass Work–Energy Simulator</h1>
-  <p>VPhys – The Virtual Physics Lab</p>
+<h1>Spring–Mass Work–Energy Simulator</h1>
+<p>VPhys – The Virtual Physics Lab</p>
 </header>
 
 <section>
-  <h2>Controls</h2>
+<h2>Interactive Controls</h2>
 
-  <label>Mass (kg):</label><br>
-  <input type="number" id="mass" value="1" step="0.1"><br>
+<label>Mass (kg)</label><br>
+<input type="number" id="m" value="1" step="0.1"><br>
 
-  <label>Spring Constant k (N/m):</label><br>
-  <input type="number" id="k" value="10"><br>
+<label>Spring Constant k (N/m)</label><br>
+<input type="number" id="k" value="10"><br>
 
-  <label>Initial Displacement x₀ (m):</label><br>
-  <input type="number" id="x0" value="0.2" step="0.05"><br>
+<label>Initial Displacement x₀ (m)</label><br>
+<input type="number" id="x0" value="0.2" step="0.05"><br>
 
-  <label>Damping b (optional):</label><br>
-  <input type="number" id="b" value="0" step="0.05"><br>
+<label>Damping Coefficient b</label><br>
+<input type="number" id="b" value="0" step="0.05"><br>
 
-  <label>Gravity:</label><br>
-  <select id="gravity">
-    <option value="9.8">Earth (9.8 m/s²)</option>
-    <option value="1.62">Moon (1.62 m/s²)</option>
-  </select><br><br>
+<label>Gravity</label><br>
+<select id="g">
+  <option value="9.8">Earth (9.8 m/s²)</option>
+  <option value="1.62">Moon (1.62 m/s²)</option>
+</select><br><br>
 
-  <button onclick="resetSim()">Reset</button>
+<button onclick="resetSim()">Reset Simulation</button>
+<button onclick="toggleEnergy()">Toggle Energy Bars</button>
 </section>
 
 <section>
-  <h2>Spring Animation</h2>
-  <canvas id="simCanvas" width="600" height="160"></canvas>
+<h2>Spring Oscillation Animation</h2>
+<canvas id="simCanvas" width="600" height="160"></canvas>
+</section>
+
+<section id="energySection">
+<h2>Energy Visualization</h2>
+
+<label>Kinetic Energy</label>
+<div class="energy-bar"><div id="keBar" class="fill" style="background:red;"></div></div>
+
+<label>Potential Energy</label>
+<div class="energy-bar"><div id="peBar" class="fill" style="background:blue;"></div></div>
+
+<label>Total Energy</label>
+<div class="energy-bar"><div id="teBar" class="fill" style="background:green;"></div></div>
 </section>
 
 <section>
-  <h2>Energy Bars</h2>
-
-  <label>Kinetic Energy</label>
-  <div class="energy-bar"><div id="keBar" class="fill" style="background:red;"></div></div>
-
-  <label>Potential Energy</label>
-  <div class="energy-bar"><div id="peBar" class="fill" style="background:blue;"></div></div>
-
-  <label>Total Energy</label>
-  <div class="energy-bar"><div id="teBar" class="fill" style="background:green;"></div></div>
+<h2>Numerical Feedback</h2>
+<p id="values"></p>
+<p id="maxValues"></p>
+<p id="periodInfo"></p>
 </section>
 
 <section>
-  <h2>Numerical Feedback</h2>
-  <p id="numbers"></p>
-  <p id="periodInfo"></p>
+<h2>Displacement vs Time</h2>
+<canvas id="graphCanvas" width="600" height="200"></canvas>
 </section>
 
 <section>
-  <h2>Displacement vs Time</h2>
-  <canvas id="graphCanvas" width="600" height="200"></canvas>
+<h2>Learning Hint</h2>
+<div class="hint">
+<p>
+• When displacement is maximum, <strong>KE = 0</strong> and <strong>PE is maximum</strong>.<br>
+• At equilibrium, <strong>PE is minimum</strong> and <strong>KE is maximum</strong>.<br>
+• With no damping, <strong>Total Energy remains constant</strong> (Work–Energy Theorem).
+</p>
+</div>
 </section>
 
-<section>
-  <h2>Learning Hint</h2>
-  <p>
-    As the block moves, <strong>potential energy converts into kinetic energy</strong>.
-    At maximum displacement, KE = 0 and PE is maximum.
-    At equilibrium, KE is maximum and PE is minimum.
-  </p>
-</section>
+<footer>
+<p>© VPhys</p>
+</footer>
 
 <script>
-let canvas = document.getElementById("simCanvas");
-let ctx = canvas.getContext("2d");
-
-let gCanvas = document.getElementById("graphCanvas");
-let gctx = gCanvas.getContext("2d");
+let sim = document.getElementById("simCanvas").getContext("2d");
+let graph = document.getElementById("graphCanvas").getContext("2d");
 
 let m, k, b, g;
 let x, v, a;
-let t = 0;
 let dt = 0.016;
+let t = 0;
+let showEnergy = true;
 
 let xData = [];
+let maxKE = 0, maxPE = 0;
 
 function resetSim() {
-  m = parseFloat(document.getElementById("mass").value);
-  k = parseFloat(document.getElementById("k").value);
-  b = parseFloat(document.getElementById("b").value);
-  g = parseFloat(document.getElementById("gravity").value);
+  m = +mInput.value;
+  k = +kInput.value;
+  b = +bInput.value;
+  g = +gInput.value;
 
-  x = parseFloat(document.getElementById("x0").value);
+  x = +x0Input.value;
   v = 0;
   t = 0;
   xData = [];
+  maxKE = maxPE = 0;
+}
+
+function toggleEnergy() {
+  showEnergy = !showEnergy;
+  document.getElementById("energySection").style.display =
+    showEnergy ? "block" : "none";
 }
 
 function update() {
@@ -155,61 +173,66 @@ function update() {
   let PE = 0.5 * k * x * x;
   let TE = KE + PE;
 
+  maxKE = Math.max(maxKE, KE);
+  maxPE = Math.max(maxPE, PE);
+
   drawSpring(x);
-  drawBars(KE, PE, TE);
+  drawEnergy(KE, PE, TE);
   drawGraph(x);
 
-  document.getElementById("numbers").innerHTML =
-    `x = ${x.toFixed(3)} m | v = ${v.toFixed(3)} m/s | KE = ${KE.toFixed(3)} J | PE = ${PE.toFixed(3)} J`;
+  values.innerHTML =
+    `x = ${x.toFixed(3)} m | v = ${v.toFixed(3)} m/s<br>
+     KE = ${KE.toFixed(3)} J | PE = ${PE.toFixed(3)} J | Total = ${TE.toFixed(3)} J`;
+
+  maxValues.innerHTML =
+    `Max KE = ${maxKE.toFixed(3)} J | Max PE = ${maxPE.toFixed(3)} J`;
 
   let T = 2 * Math.PI * Math.sqrt(m / k);
-  let f = 1 / T;
-
-  document.getElementById("periodInfo").innerHTML =
-    `Period = ${T.toFixed(2)} s | Frequency = ${f.toFixed(2)} Hz`;
+  periodInfo.innerHTML =
+    `Period = ${T.toFixed(2)} s | Frequency = ${(1/T).toFixed(2)} Hz`;
 
   requestAnimationFrame(update);
 }
 
 function drawSpring(x) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  let base = 100;
-  let scale = 300;
-  let pos = base + x * scale;
-
-  ctx.beginPath();
-  ctx.moveTo(20, 80);
-  ctx.lineTo(pos, 80);
-  ctx.stroke();
-
-  ctx.fillStyle = "#1e3a8a";
-  ctx.fillRect(pos, 60, 40, 40);
+  sim.clearRect(0, 0, 600, 160);
+  let pos = 120 + x * 300;
+  sim.beginPath();
+  sim.moveTo(20, 80);
+  sim.lineTo(pos, 80);
+  sim.stroke();
+  sim.fillStyle = "#1e3a8a";
+  sim.fillRect(pos, 60, 40, 40);
 }
 
-function drawBars(KE, PE, TE) {
-  let maxE = Math.max(KE + PE, 0.0001);
-
-  document.getElementById("keBar").style.width = (KE / maxE * 100) + "%";
-  document.getElementById("peBar").style.width = (PE / maxE * 100) + "%";
-  document.getElementById("teBar").style.width = "100%";
+function drawEnergy(KE, PE, TE) {
+  let scale = Math.max(TE, 0.001);
+  keBar.style.width = (KE / scale * 100) + "%";
+  peBar.style.width = (PE / scale * 100) + "%";
+  teBar.style.width = "100%";
 }
 
 function drawGraph(x) {
   xData.push(x);
   if (xData.length > 300) xData.shift();
-
-  gctx.clearRect(0, 0, gCanvas.width, gCanvas.height);
-  gctx.beginPath();
-
-  for (let i = 0; i < xData.length; i++) {
+  graph.clearRect(0, 0, 600, 200);
+  graph.beginPath();
+  xData.forEach((y, i) => {
     let px = i * 2;
-    let py = 100 - xData[i] * 200;
-    if (i === 0) gctx.moveTo(px, py);
-    else gctx.lineTo(px, py);
-  }
-  gctx.stroke();
+    let py = 100 - y * 200;
+    i === 0 ? graph.moveTo(px, py) : graph.lineTo(px, py);
+  });
+  graph.stroke();
 }
+
+let mInput = document.getElementById("m");
+let kInput = document.getElementById("k");
+let bInput = document.getElementById("b");
+let x0Input = document.getElementById("x0");
+let gInput = document.getElementById("g");
+let values = document.getElementById("values");
+let maxValues = document.getElementById("maxValues");
+let periodInfo = document.getElementById("periodInfo");
 
 resetSim();
 update();
