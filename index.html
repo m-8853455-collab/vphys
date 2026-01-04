@@ -46,22 +46,32 @@ button {
     margin-top: 6px;
     cursor: pointer;
 }
-button.secondary {
-    background: #555;
-}
-ul {
-    margin-top: 4px;
-    margin-bottom: 10px;
-}
-li {
-    font-family: "Courier New", monospace;
-    font-size: 14px;
-}
 footer {
     background: #1e3a8a;
     color: white;
     text-align: center;
     padding: 10px;
+}
+
+/* ===== FORMULA TABLE ===== */
+.formula-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+.formula-table th,
+.formula-table td {
+    border: 1px solid #333;
+    padding: 8px;
+    text-align: center;
+}
+.formula-table th {
+    background: #1e3a8a;
+    color: white;
+}
+.formula-table td {
+    font-family: "Courier New", monospace;
+    font-size: 14px;
 }
 </style>
 </head>
@@ -75,10 +85,46 @@ footer {
 
 <div class="container">
 
+<!-- ===== SIMULATION SPACE ===== -->
 <section>
 <canvas id="sim" width="600" height="350"></canvas>
+
+<h3>Projectile Motion Formula Reference</h3>
+
+<table class="formula-table">
+<tr>
+    <th>x-axis (Horizontal)</th>
+    <th>y-axis (Vertical)</th>
+</tr>
+<tr>
+    <td>aₓ = 0</td>
+    <td>aᵧ = −g</td>
+</tr>
+<tr>
+    <td>Vₓ = uₓ</td>
+    <td>Vᵧ = uᵧ − gt</td>
+</tr>
+<tr>
+    <td>Vₓ² = uₓ²</td>
+    <td>Vᵧ² = uᵧ² − 2gSᵧ</td>
+</tr>
+<tr>
+    <td>Sₓ = uₓt</td>
+    <td>Sᵧ = uᵧt − ½gt²</td>
+</tr>
+<tr>
+    <td>Sₓ = ½(uₓ + Vₓ)t</td>
+    <td>Sᵧ = ½(uᵧ + Vᵧ)t</td>
+</tr>
+</table>
+
+<p style="font-size:13px;color:#555;margin-top:6px;">
+<i>Note: Horizontal and vertical motions are analysed independently.</i>
+</p>
+
 </section>
 
+<!-- ===== CONTROLS ===== -->
 <section class="controls">
 
 <h3>Projectile Inputs</h3>
@@ -99,54 +145,16 @@ footer {
 </select>
 
 <button onclick="launch()">▶ Start</button>
-<button class="secondary" onclick="reset()">🔄 Reset</button>
 
 <hr>
 
 <h3>Results</h3>
-<p>Time, t = <span id="time">–</span> s</p>
+<p>t = <span id="time">–</span> s</p>
 <p>Sx = <span id="sx">–</span> m</p>
 <p>Sy = <span id="sy">–</span> m</p>
 <p>Vx = <span id="vx">–</span> m/s</p>
 <p>Vy = <span id="vy">–</span> m/s</p>
-<p>Resultant velocity, v = <span id="vr">–</span> m/s</p>
-
-<!-- ========= FORMULA REFERENCE ========= -->
-<hr>
-
-<h3>Suggested Formulae (Reference)</h3>
-
-<p><b>Horizontal motion</b></p>
-<ul>
-  <li>Sx = Vx × t</li>
-  <li>Vx = u cos θ</li>
-</ul>
-
-<p><b>Vertical motion</b></p>
-<ul>
-  <li>Sy = u sin θ × t − ½ g t²</li>
-  <li>Vy = u sin θ − g t</li>
-</ul>
-
-<p><b>Projectile properties</b></p>
-<ul>
-  <li>Resultant velocity, v = √(Vx² + Vy²)</li>
-  <li>Maximum height, H = (u² sin²θ) / (2g)</li>
-  <li style="list-style:none;">
-      Time of flight: t = [u sin θ + √((u sin θ)² + 2gh)] / g
-  </li>
-</ul>
-
-<p style="font-size:13px;color:#555;">
-<i>Note: These formulae are provided as a guide to help students analyse projectile motion.
-Calculated values are shown above.</i>
-</p>
-
-<hr>
-
-<h3>Zoom</h3>
-<button onclick="zoomIn()">➕ Zoom In</button>
-<button onclick="zoomOut()">➖ Zoom Out</button>
+<p>v = <span id="vr">–</span> m/s</p>
 
 </section>
 </div>
@@ -169,11 +177,6 @@ let dragging = false;
 let animIndex = 0;
 let animating = false;
 
-/* ---------- ZOOM ---------- */
-function zoomIn(){ scale *= 1.2; draw(); }
-function zoomOut(){ scale /= 1.2; draw(); }
-
-/* ---------- START ---------- */
 function launch() {
     const u = +uInput.value;
     const thetaDeg = +thetaInput.value;
@@ -185,99 +188,4 @@ function launch() {
     const uy = u * Math.sin(theta);
 
     path = [{x:0, y:platformHeight, ux, uy, t:0}];
-    for (let t=0.05; t<30; t+=0.05) {
-        const x = ux*t;
-        const y = platformHeight + uy*t - 0.5*g*t*t;
-        if (y < 0) break;
-        path.push({x,y,ux,uy,t});
-    }
-
-    animIndex = 0;
-    animating = true;
-    dragging = false;
-    animate();
-}
-
-/* ---------- ANIMATION ---------- */
-function animate() {
-    if (!animating) return;
-    dragIndex = animIndex;
-    draw();
-    animIndex++;
-    if (animIndex >= path.length) {
-        animating = false;
-        dragging = true;
-        return;
-    }
-    requestAnimationFrame(animate);
-}
-
-/* ---------- DRAW ---------- */
-function draw() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    ctx.fillStyle = "blue";
-    ctx.fillRect(0, groundY, canvas.width, 5);
-
-    const platformY = groundY - platformHeight * scale;
-    ctx.fillRect(0, platformY, 80 * scale/5, 5);
-
-    ctx.fillStyle = "black";
-    path.forEach(p=>{
-        ctx.beginPath();
-        ctx.arc(p.x*scale, groundY-p.y*scale, 2, 0, Math.PI*2);
-        ctx.fill();
-    });
-
-    if (!path.length) return;
-    const p = path[dragIndex];
-
-    ctx.fillStyle = "red";
-    ctx.beginPath();
-    ctx.arc(p.x*scale, groundY-p.y*scale, 6, 0, Math.PI*2);
-    ctx.fill();
-
-    const g = +env.value;
-    const vyNow = p.uy - g*p.t;
-    const vrNow = Math.sqrt(p.ux*p.ux + vyNow*vyNow);
-
-    time.innerText = p.t.toFixed(2);
-    sx.innerText = p.x.toFixed(2);
-    sy.innerText = p.y.toFixed(2);
-    vx.innerText = p.ux.toFixed(2);
-    vy.innerText = vyNow.toFixed(2);
-    vr.innerText = vrNow.toFixed(2);
-}
-
-/* ---------- DRAG ---------- */
-canvas.addEventListener("pointerdown", ()=>{ if (!animating) dragging=true; });
-canvas.addEventListener("pointerup", ()=> dragging=false);
-canvas.addEventListener("pointermove", e=>{
-    if (!dragging) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left)/scale;
-    let closest = 0;
-    path.forEach((p,i)=>{
-        if (Math.abs(p.x-x) < Math.abs(path[closest].x-x)) closest=i;
-    });
-    dragIndex = closest;
-    draw();
-});
-
-/* ---------- RESET ---------- */
-function reset() {
-    path = [];
-    animating = false;
-    dragging = false;
-    draw();
-}
-
-/* ---------- INPUT REFERENCES ---------- */
-const uInput = document.getElementById("u");
-const thetaInput = document.getElementById("theta");
-const platformH = document.getElementById("platformH");
-const env = document.getElementById("env");
-</script>
-
-</body>
-</html>
+    for (let t=0.05; t<30; t+=
