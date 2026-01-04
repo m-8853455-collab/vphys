@@ -46,9 +46,6 @@ button {
     margin-top: 10px;
     cursor: pointer;
 }
-button:hover {
-    background: #16307a;
-}
 footer {
     background: #1e3a8a;
     color: white;
@@ -94,7 +91,7 @@ footer {
 <input type="number" id="theta" value="45">
 
 <p>Platform height:</p>
-<input type="number" id="platformH" value="0">
+<input type="number" id="platformH" value="5">
 
 <p>Environment:</p>
 <select id="env">
@@ -137,14 +134,16 @@ footer {
 const canvas = document.getElementById("sim");
 const ctx = canvas.getContext("2d");
 
-let platformY = canvas.height - 20;
+const groundY = canvas.height - 20;   // landing ground
+let platformY = groundY;              // launch platform height
+
 let path = [];
 let dragIndex = 0;
 let dragging = false;
 let animIndex = 0;
 let animating = false;
 
-/* ---------- START / LAUNCH ---------- */
+/* ---------- START ---------- */
 function launch() {
     const u = Number(document.getElementById("u").value);
     const thetaDeg = Number(document.getElementById("theta").value);
@@ -152,24 +151,24 @@ function launch() {
     const g = Number(document.getElementById("env").value);
     const h = Number(document.getElementById("platformH").value);
 
-    platformY = canvas.height - 20 - h * 5;
+    platformY = groundY - h * 5;
 
     const ux = u * Math.cos(theta);
     const uy = u * Math.sin(theta);
 
     path = [];
-    path.push({ x:0, y:0, ux, uy, t:0 });
+    path.push({ x:0, y:h, ux, uy, t:0 });
 
     for (let t=0.05; t<20; t+=0.05) {
         const x = ux * t;
-        const y = uy * t - 0.5 * g * t * t;
-        if (y < 0) break;
+        const y = h + uy * t - 0.5 * g * t * t;
+        if (y < 0) break; // hit ground
         path.push({ x, y, ux, uy, t });
     }
 
-    const T = (2 * uy) / g;
+    const T = (uy + Math.sqrt(uy*uy + 2*g*h)) / g;
     const R = ux * T;
-    const H = (uy * uy) / (2 * g);
+    const H = h + (uy*uy) / (2*g);
 
     document.getElementById("ph").innerText = h.toFixed(2);
     document.getElementById("uVal").innerText = u.toFixed(2);
@@ -196,10 +195,9 @@ function animate() {
     animIndex++;
     if (animIndex >= path.length) {
         animating = false;
-        dragging = true; // enable drag after motion
+        dragging = true;
         return;
     }
-
     requestAnimationFrame(animate);
 }
 
@@ -207,20 +205,26 @@ function animate() {
 function draw() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    ctx.fillRect(0, platformY, canvas.width, 5);
+    // landing ground
+    ctx.fillRect(0, groundY, canvas.width, 5);
 
+    // launch platform (small)
+    ctx.fillRect(0, platformY, 80, 5);
+
+    // trajectory
     ctx.fillStyle = "black";
     path.forEach(p=>{
         ctx.beginPath();
-        ctx.arc(p.x*5, platformY - p.y*5, 2, 0, Math.PI*2);
+        ctx.arc(p.x*5, groundY - p.y*5, 2, 0, Math.PI*2);
         ctx.fill();
     });
 
     const p = path[dragIndex];
 
+    // ball
     ctx.fillStyle = "red";
     ctx.beginPath();
-    ctx.arc(p.x*5, platformY - p.y*5, 6, 0, Math.PI*2);
+    ctx.arc(p.x*5, groundY - p.y*5, 6, 0, Math.PI*2);
     ctx.fill();
 
     const g = Number(document.getElementById("env").value);
@@ -231,12 +235,11 @@ function draw() {
     document.getElementById("vr").innerText = vr.toFixed(2);
 }
 
-/* ---------- DRAG AFTER MOTION ---------- */
+/* ---------- DRAG AFTER LANDING ---------- */
 canvas.addEventListener("pointerdown", ()=>{
     if (!animating) dragging = true;
 });
-canvas.addEventListener("pointerup", ()=> dragging = false);
-
+canvas.addEventListener("pointerup", ()=> dragging=false);
 canvas.addEventListener("pointermove", e=>{
     if (!dragging) return;
     const rect = canvas.getBoundingClientRect();
