@@ -37,6 +37,7 @@ footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 
 <div class="container">
 
+<!-- ================= PROJECTILE MOTION ================= -->
 <section>
 <canvas id="sim" width="600" height="350"></canvas>
 
@@ -85,24 +86,9 @@ footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 
 </div>
 
-<section>
-<h2>Work–Energy Theorem</h2>
-<p><b>W = F s cosθ = ΔKE</b></p>
-
-<p>Force (N)</p><input id="weForce" value="10">
-<p>Displacement (m)</p><input id="weDisplacement" value="5">
-<p>Angle (°)</p><input id="weAngle" value="0">
-<p>Initial velocity (m/s)</p><input id="weU" value="0">
-<p>Mass (kg)</p><input id="weMass" value="2">
-
-<button onclick="calculateWorkEnergy()">Calculate</button>
-
-<p>Work = <span id="weWork">–</span> J</p>
-<p>KE initial = <span id="weKEi">–</span> J</p>
-<p>KE final = <span id="weKEf">–</span> J</p>
-</section>
-
-<footer>© 2026 VPhys – The Virtual Physics Lab</footer>
+<footer>
+© 2026 VPhys – The Virtual Physics Lab
+</footer>
 
 <script>
 const canvas = document.getElementById("sim");
@@ -117,22 +103,30 @@ let dragging = false;
 let animIndex = 0;
 let animating = false;
 
-/* ---------- ZOOM ---------- */
-function zoomIn(){ scale *= 1.2; draw(); }
-function zoomOut(){ scale /= 1.2; draw(); }
+/* ---------- ZOOM (SAFE) ---------- */
+function zoomIn(){
+  scale = Math.min(scale * 1.2, 20);
+  draw();
+}
+function zoomOut(){
+  scale = Math.max(scale / 1.2, 1);
+  draw();
+}
 
 /* ---------- START ---------- */
 function launch() {
-  const u = +document.getElementById("u").value;
-  const theta = +document.getElementById("theta").value * Math.PI/180;
-  const g = +document.getElementById("env").value;
-  const h = +document.getElementById("platformH").value;
+  scale = 5;   // reset zoom every launch (prevents invisible projectile)
+
+  const u = +u.value;
+  const theta = +theta.value * Math.PI/180;
+  const g = +env.value;
+  const h = +platformH.value;
 
   const ux = u * Math.cos(theta);
   const uy = u * Math.sin(theta);
 
   path = [{x:0, y:h, ux, uy, t:0}];
-  for(let t=0.05;t<30;t+=0.05){
+  for(let t=0.05; t<30; t+=0.05){
     const x = ux*t;
     const y = h + uy*t - 0.5*g*t*t;
     if(y < 0) break;
@@ -168,6 +162,7 @@ function draw(){
   ctx.fillStyle = "blue";
   ctx.fillRect(0, groundY, canvas.width, 5);
 
+  // platform (sticks to ball)
   if(path.length){
     const platformY = groundY - path[0].y * scale;
     ctx.fillRect(0, platformY, 80, 5);
@@ -190,16 +185,14 @@ function draw(){
   ctx.arc(p.x*scale, groundY - p.y*scale, 6, 0, Math.PI*2);
   ctx.fill();
 
-  const g = +document.getElementById("env").value;
-  const vy = p.uy - g*p.t;
+  const vy = p.uy - (+env.value)*p.t;
 
-  document.getElementById("time").textContent = p.t.toFixed(2);
-  document.getElementById("sx").textContent = p.x.toFixed(2);
-  document.getElementById("sy").textContent = p.y.toFixed(2);
-  document.getElementById("vx").textContent = p.ux.toFixed(2);
+  time.textContent = p.t.toFixed(2);
+  sx.textContent = p.x.toFixed(2);
+  sy.textContent = p.y.toFixed(2);
+  vx.textContent = p.ux.toFixed(2);
   document.getElementById("vy").textContent = vy.toFixed(2);
-  document.getElementById("vr").textContent =
-    Math.sqrt(p.ux*p.ux + vy*vy).toFixed(2);
+  vr.textContent = Math.sqrt(p.ux*p.ux + vy*vy).toFixed(2);
 }
 
 /* ---------- DRAG ---------- */
@@ -215,7 +208,6 @@ canvas.addEventListener("pointermove", e=>{
   dragIndex = closest;
   draw();
 });
-
 </script>
 
 </body>
