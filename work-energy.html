@@ -1,33 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Work–Energy Theorem | VPhys</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #eef2f7;
+    }
+    header, footer {
+      background: #1e3a8a;
+      color: white;
+      text-align: center;
+      padding: 15px;
+    }
+    nav a {
+      color: white;
+      margin: 0 10px;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    section {
+      background: white;
+      margin: 20px auto;
+      padding: 20px;
+      width: 85%;
+      border-radius: 8px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #333;
+      padding: 8px;
+      text-align: center;
+    }
+    th {
+      background: #1e3a8a;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <h1>Work–Energy Theorem</h1>
+  <p>VPhys – The Virtual Physics Lab</p>
+  <nav>
+    <a href="index.html">Home</a>
+    <a href="work-energy.html">Work–Energy Theorem</a>
+  </nav>
+</header>
+
 <section>
-  <h2>Interactive Work–Energy Calculator</h2>
-
-  <p>Enter the mass and final velocity to calculate work done.</p>
-
-  <label>Mass (kg):</label><br>
-  <input type="number" id="mass" placeholder="e.g. 2"><br><br>
-
-  <label>Final Velocity (m/s):</label><br>
-  <input type="number" id="velocity" placeholder="e.g. 4"><br><br>
-
-  <button onclick="calculateWork()">Calculate Work</button>
-
-  <h3 id="result"></h3>
+  <h2>Statement</h2>
+  <p>
+    The <strong>Work–Energy Theorem</strong> states that the net work done on an
+    object is equal to the change in its kinetic energy.
+  </p>
 </section>
 
-<script>
-  function calculateWork() {
-    let m = document.getElementById("mass").value;
-    let v = document.getElementById("velocity").value;
+<section>
+  <h2>Formula</h2>
+  <table>
+    <tr>
+      <th>Expression</th>
+      <th>Meaning</th>
+    </tr>
+    <tr>
+      <td>W = ΔKE</td>
+      <td>Net work equals change in kinetic energy</td>
+    </tr>
+    <tr>
+      <td>KE = ½mv²</td>
+      <td>Kinetic energy of a moving object</td>
+    </tr>
+  </table>
+</section>
 
-    if (m === "" || v === "") {
-      document.getElementById("result").innerHTML =
-        "⚠️ Please enter both values.";
-      return;
-    }
+<section>
+  <h2>Explanation</h2>
+  <ul>
+    <li>Positive work increases kinetic energy</li>
+    <li>Negative work decreases kinetic energy</li>
+    <li>Zero work means constant kinetic energy</li>
+  </ul>
+</section>
 
-    let work = 0.5 * m * v * v;
+<section>
+  <h2>Example</h2>
+  <p>
+    A 2 kg object accelerates from rest to 4 m/s.
+  </p>
+  <p>
+    Work done = ½ × 2 × (4² − 0²) = <strong>16 J</strong>
+  </p>
+</section>
 
-    document.getElementById("result").innerHTML =
-      "Work done (ΔKE) = <strong>" + work + " J</strong>";
-  }
-</script>
+<footer>
+  <p>© VPhys</p>
+</footer>
+
+</body>
+</html>
