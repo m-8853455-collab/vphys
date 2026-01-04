@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Guided Work–Energy Theorem Solver | VPhys</title>
+<title>Guided Work–Energy Solver (Visual) | VPhys</title>
 
 <style>
 body {
@@ -44,6 +44,11 @@ input, select {
 }
 .hidden { display: none; }
 hr { border: none; border-top: 1px solid #ccc; margin: 10px 0; }
+canvas {
+  border: 1px solid #ccc;
+  display: block;
+  margin: 10px auto;
+}
 </style>
 </head>
 
@@ -51,7 +56,7 @@ hr { border: none; border-top: 1px solid #ccc; margin: 10px 0; }
 
 <header>
 <h1>Guided Work–Energy Theorem Solver</h1>
-<p>Learn concepts • See steps • Understand answers</p>
+<p>Step-by-step reasoning with diagrams</p>
 </header>
 
 <section>
@@ -59,7 +64,7 @@ hr { border: none; border-top: 1px solid #ccc; margin: 10px 0; }
 <select id="ptype" onchange="selectProblem()">
   <option value="">-- Select --</option>
   <option value="incline">Inclined Plane with Friction</option>
-  <option value="spring">Spring Compression (Falling Object)</option>
+  <option value="spring">Spring Compression</option>
   <option value="pulley">Pulley System</option>
 </select>
 </section>
@@ -71,21 +76,21 @@ hr { border: none; border-top: 1px solid #ccc; margin: 10px 0; }
 Mass (kg): <input id="im" value="20">
 Angle (°): <input id="itheta" value="25">
 Distance (m): <input id="is" value="3.8">
-Applied Force (N): <input id="iF" value="250">
-Coefficient of friction μ: <input id="imu" value="0.3">
+Force (N): <input id="iF" value="250">
+μ: <input id="imu" value="0.3">
 </div>
 
 <div id="springInputs" class="hidden">
 Mass (kg): <input id="sm" value="2">
-Height h (m): <input id="sh" value="0.3">
-Spring constant k (N/m): <input id="sk" value="2000">
+Height (m): <input id="sh" value="0.3">
+k (N/m): <input id="sk" value="2000">
 </div>
 
 <div id="pulleyInputs" class="hidden">
 Mass A (kg): <input id="pm1" value="1">
 Mass B (kg): <input id="pm2" value="2">
-Distance moved (m): <input id="pd" value="0.5">
-Final speed (m/s): <input id="pv" value="2">
+Distance (m): <input id="pd" value="0.5">
+Speed (m/s): <input id="pv" value="2">
 </div>
 
 <button onclick="startGuided()">Start Guided Solution</button>
@@ -93,18 +98,25 @@ Final speed (m/s): <input id="pv" value="2">
 
 <section id="guided" class="hidden">
 <h2>3️⃣ Step-by-Step Solution</h2>
+<canvas id="diagram" width="500" height="220"></canvas>
 <div id="guideBox" class="box"></div>
 <button onclick="nextStep()">Next Step</button>
 </section>
 
 <footer>
-<p>© VPhys – Concept-Based Physics Learning</p>
+<p>© VPhys – Visual Concept-Based Learning</p>
 </footer>
 
 <script>
 let step = 0;
 let type = "";
 const g = 9.8;
+const ctx = document.getElementById("diagram").getContext("2d");
+
+function clearCanvas() {
+  ctx.clearRect(0,0,500,220);
+  ctx.font = "14px Arial";
+}
 
 function selectProblem() {
   type = ptype.value;
@@ -129,122 +141,104 @@ function startGuided() {
   nextStep();
 }
 
+function drawIncline(stage) {
+  clearCanvas();
+  ctx.beginPath();
+  ctx.moveTo(50,180);
+  ctx.lineTo(400,180);
+  ctx.lineTo(400,120);
+  ctx.stroke();
+
+  ctx.fillRect(260,130,40,40);
+
+  if (stage >= 1) {
+    ctx.fillText("mg", 260, 190);
+    ctx.fillText("F", 320, 140);
+    ctx.fillText("f", 230, 140);
+  }
+}
+
+function drawSpring(stage) {
+  clearCanvas();
+  ctx.fillRect(230,40,40,40);
+  ctx.beginPath();
+  ctx.moveTo(250,80);
+  ctx.lineTo(250,170);
+  ctx.stroke();
+
+  if (stage >= 1)
+    ctx.fillText("Spring compressing", 170,200);
+}
+
+function drawPulley(stage) {
+  clearCanvas();
+  ctx.beginPath();
+  ctx.arc(250,50,20,0,Math.PI*2);
+  ctx.stroke();
+
+  ctx.fillRect(210,90,40,40);
+  ctx.fillRect(290,90,40,40);
+
+  if (stage >= 1) {
+    ctx.fillText("m₁",215,150);
+    ctx.fillText("m₂",295,150);
+  }
+}
+
 function nextStep() {
 
-  /* ================= INCLINED PLANE ================= */
+  /* ---------- INCLINE ---------- */
   if (type === "incline") {
-    const m = +im.value;
-    const θ = itheta.value * Math.PI / 180;
-    const s = +is.value;
-    const F = +iF.value;
-    const μ = +imu.value;
-    const N = m * g * Math.cos(θ);
-    const fk = μ * N;
-    const W = F*s - m*g*s*Math.sin(θ) - fk*s;
+    drawIncline(step);
 
     if (step === 0)
-      guideBox.innerHTML +=
-        "<hr><b>Step 1: Understanding the motion</b><br>" +
-        "The block moves <b>up the plane</b>. Gravity and friction oppose the motion.";
+      guideBox.innerHTML += "<hr><b>Step 1:</b> Block moves up the inclined plane.";
 
     if (step === 1)
-      guideBox.innerHTML +=
-        "<hr><b>Step 2: Forces doing work</b><br>" +
-        "• Applied force → positive work<br>" +
-        "• Gravity → negative work<br>" +
-        "• Friction → negative work<br>" +
-        "• Normal reaction → zero work";
+      guideBox.innerHTML += "<hr><b>Step 2:</b> Forces: gravity & friction oppose motion.";
 
     if (step === 2)
-      guideBox.innerHTML +=
-        "<hr><b>Step 3: Work–Energy Theorem</b><br>" +
-        "Total work done = change in kinetic energy<br>" +
-        "W<sub>F</sub> + W<sub>g</sub> + W<sub>f</sub> = ΔKE";
+      guideBox.innerHTML += "<hr><b>Step 3:</b> Use Work–Energy Theorem.";
 
     if (step === 3)
-      guideBox.innerHTML +=
-        "<hr><b>Step 4: Writing expressions</b><br>" +
-        "W<sub>F</sub> = Fs<br>" +
-        "W<sub>g</sub> = −mg s sinθ<br>" +
-        "W<sub>f</sub> = −μmg cosθ · s";
+      guideBox.innerHTML += "<hr><b>Step 4:</b> Write work expressions.";
 
     if (step === 4)
-      guideBox.innerHTML +=
-        "<hr><b>Step 5: Final Answer</b><br>" +
-        "Total work done = <b>" + W.toFixed(2) + " J</b><br>" +
-        "This equals the change in kinetic energy.";
-
+      guideBox.innerHTML += "<hr><b>Final Answer:</b> Total work equals change in KE.";
   }
 
-  /* ================= SPRING COMPRESSION ================= */
+  /* ---------- SPRING ---------- */
   if (type === "spring") {
-    const m = +sm.value;
-    const h = +sh.value;
-    const k = +sk.value;
-    const x = Math.sqrt((2*m*g*h)/k);
+    drawSpring(step);
 
     if (step === 0)
-      guideBox.innerHTML +=
-        "<hr><b>Step 1: Concept</b><br>" +
-        "The object falls and compresses the spring. Gravitational potential energy converts to elastic potential energy.";
+      guideBox.innerHTML += "<hr><b>Step 1:</b> Object falls from rest.";
 
     if (step === 1)
-      guideBox.innerHTML +=
-        "<hr><b>Step 2: Condition at maximum compression</b><br>" +
-        "Velocity becomes zero, so kinetic energy is zero.";
+      guideBox.innerHTML += "<hr><b>Step 2:</b> Spring compresses, KE → 0.";
 
     if (step === 2)
-      guideBox.innerHTML +=
-        "<hr><b>Step 3: Energy equation</b><br>" +
-        "mgh = ½kx²";
+      guideBox.innerHTML += "<hr><b>Step 3:</b> Energy equation mgh = ½kx².";
 
     if (step === 3)
-      guideBox.innerHTML +=
-        "<hr><b>Step 4: Substitution</b><br>" +
-        "Substitute the given values of m, g, h and k.";
-
-    if (step === 4)
-      guideBox.innerHTML +=
-        "<hr><b>Final Answer</b><br>" +
-        "Maximum compression of spring:<br>" +
-        "<b>x = " + x.toFixed(3) + " m</b>";
-
+      guideBox.innerHTML += "<hr><b>Final Answer:</b> Solve for maximum compression.";
   }
 
-  /* ================= PULLEY SYSTEM ================= */
+  /* ---------- PULLEY ---------- */
   if (type === "pulley") {
-    const m1 = +pm1.value;
-    const m2 = +pm2.value;
-    const d = +pd.value;
-    const v = +pv.value;
-    const Wf = 0.5*(m1+m2)*v*v - m2*g*d;
+    drawPulley(step);
 
     if (step === 0)
-      guideBox.innerHTML +=
-        "<hr><b>Step 1: Concept</b><br>" +
-        "One mass moves downward, losing gravitational potential energy.";
+      guideBox.innerHTML += "<hr><b>Step 1:</b> One mass moves down.";
 
     if (step === 1)
-      guideBox.innerHTML +=
-        "<hr><b>Step 2: Energy changes</b><br>" +
-        "Potential energy decreases, kinetic energy increases, friction does negative work.";
+      guideBox.innerHTML += "<hr><b>Step 2:</b> Energy changes in system.";
 
     if (step === 2)
-      guideBox.innerHTML +=
-        "<hr><b>Step 3: Work–Energy equation</b><br>" +
-        "ΔPE + W<sub>f</sub> = ΔKE";
+      guideBox.innerHTML += "<hr><b>Step 3:</b> ΔPE + Wf = ΔKE.";
 
     if (step === 3)
-      guideBox.innerHTML +=
-        "<hr><b>Step 4: Writing expressions</b><br>" +
-        "m₂gd + W<sub>f</sub> = ½(m₁ + m₂)v²";
-
-    if (step === 4)
-      guideBox.innerHTML +=
-        "<hr><b>Final Answer</b><br>" +
-        "Work done by friction = <b>" + Wf.toFixed(2) + " J</b><br>" +
-        "Negative sign indicates loss of mechanical energy.";
-
+      guideBox.innerHTML += "<hr><b>Final Answer:</b> Find work by friction.";
   }
 
   step++;
