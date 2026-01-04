@@ -32,7 +32,6 @@ section {
 canvas {
     border: 1px solid black;
     background: #e6f7fb;
-    touch-action: none;
 }
 h2, h3 {
     color: #1e3a8a;
@@ -43,8 +42,14 @@ button {
     color: white;
     border: none;
     border-radius: 5px;
-    margin-top: 10px;
+    margin-top: 6px;
     cursor: pointer;
+}
+button.secondary {
+    background: #555;
+}
+input[type=range] {
+    width: 100%;
 }
 footer {
     background: #1e3a8a;
@@ -62,7 +67,6 @@ footer {
 <p>The Virtual Physics Lab</p>
 </header>
 
-<!-- ================= PROJECTILE MOTION ================= -->
 <div class="container">
 
 <section>
@@ -70,42 +74,36 @@ footer {
 </section>
 
 <section class="controls">
-<h3>Projectile Information</h3>
+<h3>Projectile Controls</h3>
 
-<p>Time, t (s): <span id="time">–</span></p>
-<p>Platform Height (m): <span id="ph">–</span></p>
-<p>Initial Velocity u (m/s): <span id="uVal">–</span></p>
-<p>Launch Angle θ (°): <span id="thetaVal">–</span></p>
-
-<p>Sx (m): <span id="sx">–</span></p>
-<p>Sy (m): <span id="sy">–</span></p>
-
-<p>Horizontal Range (m): <span id="range">–</span></p>
-<p>Maximum Height (m): <span id="maxH">–</span></p>
-
-<p>Vx (m/s): <span id="vx">–</span></p>
-<p>Vy (m/s): <span id="vy">–</span></p>
-<p>Resultant Velocity (m/s): <span id="vr">–</span></p>
-<p>Environment: <span id="envVal">–</span></p>
-
-<hr>
-
-<p>Initial speed u:</p>
+<label>Initial speed u (m/s)</label>
 <input type="number" id="u" value="20">
 
-<p>Launch angle θ:</p>
+<label>Launch angle θ (°)</label>
 <input type="number" id="theta" value="45">
 
-<p>Platform height:</p>
+<label>Platform height h (m)</label>
 <input type="number" id="platformH" value="5">
 
-<p>Environment:</p>
+<label>Environment</label>
 <select id="env">
     <option value="9.8">Earth</option>
     <option value="1.62">Moon</option>
 </select>
 
-<button onclick="launch()">▶ Start</button>
+<button onclick="addPath()">▶ Start (Add Path)</button>
+<button class="secondary" onclick="resetPaths()">🔄 Reset</button>
+
+<hr>
+
+<h3>View Controls</h3>
+<button onclick="zoomIn()">➕ Zoom In</button>
+<button onclick="zoomOut()">➖ Zoom Out</button>
+
+<label>Animation Speed</label>
+<input type="range" min="0.5" max="3" step="0.1" value="1" id="speed">
+
+<p><small>Tip: Add multiple paths to compare trajectories.</small></p>
 </section>
 
 </div>
@@ -116,7 +114,7 @@ footer {
 <p>Mass (kg):</p>
 <input type="number" id="mass" value="2">
 <p>Force (N):</p>
-<input type="number" id="force" value="10"><br><br>
+<input type="number" id="force" value="10">
 <button onclick="calculateForce()">Calculate</button>
 <p>Acceleration a = <span id="acc">–</span> m/s²</p>
 </section>
@@ -127,7 +125,7 @@ footer {
 <p>Voltage (V):</p>
 <input type="number" id="voltage" value="12">
 <p>Resistance (Ω):</p>
-<input type="number" id="resistance" value="6"><br><br>
+<input type="number" id="resistance" value="6">
 <button onclick="calculateCurrent()">Calculate</button>
 <p>Current I = <span id="current">–</span> A</p>
 </section>
@@ -143,137 +141,128 @@ const ctx = canvas.getContext("2d");
 const groundY = canvas.height - 20;
 let platformY = groundY;
 
-let path = [];
-let dragIndex = 0;
-let dragging = false;
+let scale = 5;               // zoom scale
+let speed = 1;               // animation speed
+
+let allPaths = [];
+let currentPath = null;
 let animIndex = 0;
 let animating = false;
 
-/* ---------- START ---------- */
-function launch() {
-    const u = Number(document.getElementById("u").value);
-    const thetaDeg = Number(document.getElementById("theta").value);
-    const theta = thetaDeg * Math.PI / 180;
-    const g = Number(document.getElementById("env").value);
-    const h = Number(document.getElementById("platformH").value);
+const colors = ["red","green","purple","orange","brown","darkcyan"];
 
-    platformY = groundY - h * 5;
+/* ---------- ZOOM ---------- */
+function zoomIn() {
+    scale *= 1.2;
+    draw();
+}
+function zoomOut() {
+    scale /= 1.2;
+    draw();
+}
+
+/* ---------- ADD PATH ---------- */
+function addPath() {
+    const u = +uInput.value;
+    const thetaDeg = +thetaInput.value;
+    const theta = thetaDeg * Math.PI / 180;
+    const g = +env.value;
+    const h = +platformH.value;
+
+    platformY = groundY - h * scale;
 
     const ux = u * Math.cos(theta);
     const uy = u * Math.sin(theta);
 
-    path = [];
-    path.push({ x:0, y:h, ux, uy, t:0 });
+    let path = [];
+    path.push({x:0, y:h, ux, uy, t:0});
 
     for (let t=0.05; t<30; t+=0.05) {
         const x = ux * t;
         const y = h + uy * t - 0.5 * g * t * t;
         if (y < 0) break;
-        path.push({ x, y, ux, uy, t });
+        path.push({x,y,ux,uy,t});
     }
 
-    const T = (uy + Math.sqrt(uy*uy + 2*g*h)) / g;
-    const R = ux * T;
-    const H = h + (uy*uy) / (2*g);
+    const color = colors[allPaths.length % colors.length];
+    allPaths.push({points:path, color});
+    currentPath = path;
 
-    document.getElementById("ph").innerText = h.toFixed(2);
-    document.getElementById("uVal").innerText = u.toFixed(2);
-    document.getElementById("thetaVal").innerText = thetaDeg.toFixed(2);
-    document.getElementById("range").innerText = R.toFixed(2);
-    document.getElementById("maxH").innerText = H.toFixed(2);
-    document.getElementById("vx").innerText = ux.toFixed(2);
-    document.getElementById("envVal").innerText = g === 9.8 ? "Earth" : "Moon";
-
-    dragIndex = 0;
     animIndex = 0;
     animating = true;
-    dragging = false;
     animate();
+}
+
+/* ---------- RESET ---------- */
+function resetPaths() {
+    allPaths = [];
+    currentPath = null;
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    draw();
 }
 
 /* ---------- ANIMATION ---------- */
 function animate() {
     if (!animating) return;
 
-    dragIndex = animIndex;
-    draw();
+    draw(animIndex);
+    animIndex += speed;
 
-    animIndex++;
-    if (animIndex >= path.length) {
+    if (animIndex >= currentPath.length) {
         animating = false;
-        dragging = true;
         return;
     }
     requestAnimationFrame(animate);
 }
 
 /* ---------- DRAW ---------- */
-function draw() {
+function draw(activeIndex=null) {
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    // platforms (BLUE)
+    // platforms (blue)
     ctx.fillStyle = "blue";
-    ctx.fillRect(0, groundY, canvas.width, 5);   // landing ground
-    ctx.fillRect(0, platformY, 80, 5);           // launch platform
+    ctx.fillRect(0, groundY, canvas.width, 5);
+    ctx.fillRect(0, platformY, 80, 5);
 
-    // trajectory (BLACK)
-    ctx.fillStyle = "black";
-    path.forEach(p=>{
+    // trajectories
+    allPaths.forEach(obj=>{
+        ctx.fillStyle = obj.color;
+        obj.points.forEach((p,i)=>{
+            if (activeIndex!==null && obj.points===currentPath && i>activeIndex) return;
+            ctx.beginPath();
+            ctx.arc(p.x*scale, groundY - p.y*scale, 2, 0, Math.PI*2);
+            ctx.fill();
+        });
+    });
+
+    // moving ball
+    if (currentPath && activeIndex!==null) {
+        const p = currentPath[Math.floor(activeIndex)];
+        ctx.fillStyle = "black";
         ctx.beginPath();
-        ctx.arc(p.x*5, groundY - p.y*5, 2, 0, Math.PI*2);
+        ctx.arc(p.x*scale, groundY - p.y*scale, 6, 0, Math.PI*2);
         ctx.fill();
-    });
-
-    const p = path[dragIndex];
-
-    // ball (RED)
-    ctx.fillStyle = "red";
-    ctx.beginPath();
-    ctx.arc(p.x*5, groundY - p.y*5, 6, 0, Math.PI*2);
-    ctx.fill();
-
-    const g = Number(document.getElementById("env").value);
-    const vy = p.uy - g*p.t;
-    const vr = Math.sqrt(p.ux*p.ux + vy*vy);
-
-    document.getElementById("time").innerText = p.t.toFixed(2);
-    document.getElementById("sx").innerText = p.x.toFixed(2);
-    document.getElementById("sy").innerText = p.y.toFixed(2);
-    document.getElementById("vy").innerText = vy.toFixed(2);
-    document.getElementById("vr").innerText = vr.toFixed(2);
+    }
 }
-
-/* ---------- DRAG AFTER LANDING ---------- */
-canvas.addEventListener("pointerdown", ()=>{
-    if (!animating) dragging = true;
-});
-canvas.addEventListener("pointerup", ()=> dragging=false);
-canvas.addEventListener("pointermove", e=>{
-    if (!dragging) return;
-    const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left)/5;
-
-    let closest = 0;
-    path.forEach((p,i)=>{
-        if (Math.abs(p.x-x) < Math.abs(path[closest].x-x)) closest = i;
-    });
-    dragIndex = closest;
-    draw();
-});
 
 /* ---------- FORCE ---------- */
 function calculateForce() {
-    const m = Number(document.getElementById("mass").value);
-    const F = Number(document.getElementById("force").value);
-    document.getElementById("acc").innerText = (F/m).toFixed(2);
+    acc.innerText = (+force.value / +mass.value).toFixed(2);
 }
 
 /* ---------- ELECTRICITY ---------- */
 function calculateCurrent() {
-    const V = Number(document.getElementById("voltage").value);
-    const R = Number(document.getElementById("resistance").value);
-    document.getElementById("current").innerText = (V/R).toFixed(2);
+    current.innerText = (+voltage.value / +resistance.value).toFixed(2);
 }
+
+/* ---------- INPUT REFERENCES ---------- */
+const uInput = document.getElementById("u");
+const thetaInput = document.getElementById("theta");
+const platformH = document.getElementById("platformH");
+const env = document.getElementById("env");
+document.getElementById("speed").addEventListener("input", e=>{
+    speed = +e.target.value;
+});
 </script>
 
 </body>
