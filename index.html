@@ -5,56 +5,19 @@
 <title>VPhys – The Virtual Physics Lab</title>
 
 <style>
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    background: #eef2f7;
-}
-header {
-    background: #1e3a8a;
-    color: white;
-    padding: 20px;
-    text-align: center;
-}
-.container {
-    display: flex;
-    gap: 20px;
-    margin: 20px;
-}
-section {
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-}
-.controls {
-    width: 340px;
-}
-canvas {
-    border: 1px solid black;
-    background: #e6f7fb;
-    touch-action: none;
-}
-h2, h3 {
-    color: #1e3a8a;
-}
+body { font-family: Arial, sans-serif; margin:0; background:#eef2f7; }
+header { background:#1e3a8a; color:white; text-align:center; padding:20px; }
+.container { display:flex; gap:20px; margin:20px; }
+section { background:white; padding:20px; border-radius:8px; }
+.controls { width:340px; }
+canvas { border:1px solid black; background:#e6f7fb; touch-action:none; }
 button {
-    padding: 8px 14px;
-    background: #1e3a8a;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    margin-top: 6px;
-    cursor: pointer;
+    background:#1e3a8a; color:white;
+    border:none; border-radius:5px;
+    padding:8px 14px; margin-top:6px; cursor:pointer;
 }
-button.secondary {
-    background: #555;
-}
-footer {
-    background: #1e3a8a;
-    color: white;
-    text-align: center;
-    padding: 10px;
-}
+button.secondary { background:#555; }
+footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 </style>
 </head>
 
@@ -102,7 +65,7 @@ footer {
 <hr>
 
 <h3>Results</h3>
-<p>Time t = <span id="time">–</span> s</p>
+<p>t = <span id="time">–</span> s</p>
 <p>Sx = <span id="sx">–</span> m</p>
 <p>Sy = <span id="sy">–</span> m</p>
 <p>Vx = <span id="vx">–</span> m/s</p>
@@ -121,47 +84,41 @@ const canvas = document.getElementById("sim");
 const ctx = canvas.getContext("2d");
 
 const groundY = canvas.height - 20;
+let scale = 5;
 
-let scale = 5;          // 🔍 zoom scale
 let platformHeight = 0;
-
 let path = [];
 let dragIndex = 0;
+let dragging = false;
 let animIndex = 0;
 let animating = false;
 
 /* ---------- ZOOM ---------- */
-function zoomIn() {
-    scale *= 1.2;
-    draw();
-}
-function zoomOut() {
-    scale /= 1.2;
-    draw();
-}
+function zoomIn() { scale *= 1.2; draw(); }
+function zoomOut() { scale /= 1.2; draw(); }
 
 /* ---------- START ---------- */
 function launch() {
-    const u = +document.getElementById("u").value;
-    const thetaDeg = +document.getElementById("theta").value;
-    const theta = thetaDeg * Math.PI / 180;
-    const g = +document.getElementById("env").value;
-    platformHeight = +document.getElementById("platformH").value;
+    const u = +uInput.value;
+    const thetaDeg = +thetaInput.value;
+    const theta = thetaDeg * Math.PI/180;
+    const g = +env.value;
+    platformHeight = +platformH.value;
 
     const ux = u * Math.cos(theta);
     const uy = u * Math.sin(theta);
 
-    path = [{ x:0, y:platformHeight, ux, uy, t:0 }];
-
-    for (let t = 0.05; t < 30; t += 0.05) {
-        const x = ux * t;
-        const y = platformHeight + uy * t - 0.5 * g * t * t;
+    path = [{x:0, y:platformHeight, ux, uy, t:0}];
+    for (let t=0.05; t<30; t+=0.05) {
+        const x = ux*t;
+        const y = platformHeight + uy*t - 0.5*g*t*t;
         if (y < 0) break;
-        path.push({ x, y, ux, uy, t });
+        path.push({x,y,ux,uy,t});
     }
 
     animIndex = 0;
     animating = true;
+    dragging = false;
     animate();
 }
 
@@ -171,7 +128,11 @@ function animate() {
     dragIndex = animIndex;
     draw();
     animIndex++;
-    if (animIndex >= path.length) animating = false;
+    if (animIndex >= path.length) {
+        animating = false;
+        dragging = true;
+        return;
+    }
     requestAnimationFrame(animate);
 }
 
@@ -179,11 +140,11 @@ function animate() {
 function draw() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    // ground (blue)
+    // ground
     ctx.fillStyle = "blue";
     ctx.fillRect(0, groundY, canvas.width, 5);
 
-    // starting platform (sticks with ball)
+    // platform (sticks with ball)
     const platformY = groundY - platformHeight * scale;
     ctx.fillRect(0, platformY, 80 * scale/5, 5);
 
@@ -191,7 +152,7 @@ function draw() {
     ctx.fillStyle = "black";
     path.forEach(p=>{
         ctx.beginPath();
-        ctx.arc(p.x * scale, groundY - p.y * scale, 2, 0, Math.PI*2);
+        ctx.arc(p.x*scale, groundY-p.y*scale, 2, 0, Math.PI*2);
         ctx.fill();
     });
 
@@ -202,28 +163,50 @@ function draw() {
     // ball
     ctx.fillStyle = "red";
     ctx.beginPath();
-    ctx.arc(p.x * scale, groundY - p.y * scale, 6, 0, Math.PI*2);
+    ctx.arc(p.x*scale, groundY-p.y*scale, 6, 0, Math.PI*2);
     ctx.fill();
 
-    const g = +document.getElementById("env").value;
-    const vy = p.uy - g * p.t;
+    const g = +env.value;
+    const vy = p.uy - g*p.t;
     const vr = Math.sqrt(p.ux*p.ux + vy*vy);
 
-    document.getElementById("time").innerText = p.t.toFixed(2);
-    document.getElementById("sx").innerText = p.x.toFixed(2);
-    document.getElementById("sy").innerText = p.y.toFixed(2);
-    document.getElementById("vx").innerText = p.ux.toFixed(2);
-    document.getElementById("vy").innerText = vy.toFixed(2);
-    document.getElementById("vr").innerText = vr.toFixed(2);
+    time.innerText = p.t.toFixed(2);
+    sx.innerText = p.x.toFixed(2);
+    sy.innerText = p.y.toFixed(2);
+    vx.innerText = p.ux.toFixed(2);
+    vy.innerText = vy.toFixed(2);
+    vr.innerText = vr.toFixed(2);
 }
+
+/* ---------- DRAG AFTER ANIMATION ---------- */
+canvas.addEventListener("pointerdown", ()=>{ if (!animating) dragging=true; });
+canvas.addEventListener("pointerup", ()=> dragging=false);
+canvas.addEventListener("pointermove", e=>{
+    if (!dragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / scale;
+
+    let closest = 0;
+    path.forEach((p,i)=>{
+        if (Math.abs(p.x-x) < Math.abs(path[closest].x-x)) closest=i;
+    });
+    dragIndex = closest;
+    draw();
+});
 
 /* ---------- RESET ---------- */
 function reset() {
     path = [];
     animating = false;
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    dragging = false;
     draw();
 }
+
+/* ---------- INPUT REFERENCES ---------- */
+const uInput = document.getElementById("u");
+const thetaInput = document.getElementById("theta");
+const platformH = document.getElementById("platformH");
+const env = document.getElementById("env");
 </script>
 
 </body>
