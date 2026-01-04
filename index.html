@@ -1,47 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>VPhys – The Virtual Physics Lab</title>
+
+<style>
+body { font-family: Arial, sans-serif; margin:0; background:#eef2f7; }
+header { background:#1e3a8a; color:white; text-align:center; padding:20px; }
+.container { display:flex; gap:20px; margin:20px; }
+section { background:white; padding:20px; border-radius:8px; }
+.controls { width:340px; }
+canvas { border:1px solid black; background:#e6f7fb; touch-action:none; }
+button {
+  padding:8px 14px; background:#1e3a8a; color:white;
+  border:none; border-radius:5px; margin-top:6px; cursor:pointer;
+}
+footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
+
+table { width:100%; border-collapse:collapse; margin-top:10px; }
+th,td { border:1px solid #333; padding:6px; text-align:center; }
+th { background:#1e3a8a; color:white; }
+td { font-family:Courier New, monospace; }
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>VPhys</h1>
+<p>The Virtual Physics Lab</p>
+</header>
+
+<!-- ================= PROJECTILE MOTION ================= -->
+<div class="container">
+
+<section>
+<canvas id="sim" width="600" height="350"></canvas>
+
+<h3>Projectile Motion Formula Reference</h3>
+<table>
+<tr><th>x-axis</th><th>y-axis</th></tr>
+<tr><td>aₓ = 0</td><td>aᵧ = −g</td></tr>
+<tr><td>Vₓ = uₓ</td><td>Vᵧ = uᵧ − gt</td></tr>
+<tr><td>Sₓ = uₓt</td><td>Sᵧ = uᵧt − ½gt²</td></tr>
+<tr><td>Sₓ = ½(uₓ+Vₓ)t</td><td>Sᵧ = ½(uᵧ+Vᵧ)t</td></tr>
+</table>
+</section>
+
+<section class="controls">
+<h3>Projectile Inputs</h3>
+
+<p>Initial speed u (m/s)</p>
+<input id="u" type="number" value="20">
+
+<p>Launch angle θ (°)</p>
+<input id="theta" type="number" value="45">
+
+<p>Platform height h (m)</p>
+<input id="platformH" type="number" value="5">
+
+<p>Environment</p>
+<select id="env">
+<option value="9.8">Earth</option>
+<option value="1.62">Moon</option>
+</select>
+
+<button onclick="launch()">▶ Start</button>
+
+<hr>
+<h3>Results</h3>
+<p>t = <span id="time">–</span> s</p>
+<p>Sx = <span id="sx">–</span> m</p>
+<p>Sy = <span id="sy">–</span> m</p>
+<p>Vx = <span id="vx">–</span> m/s</p>
+<p>Vy = <span id="vy">–</span> m/s</p>
+<p>v = <span id="vr">–</span> m/s</p>
+</section>
+
+</div>
+
+<!-- ================= WORK–ENERGY THEOREM ================= -->
+<section>
+<h2>Work–Energy Theorem Simulation</h2>
+
+<p><b>W = Fs cosθ = ΔKE</b></p>
+
+<p>Force F (N)</p>
+<input id="weForce" type="number" value="10">
+
+<p>Displacement s (m)</p>
+<input id="weDisplacement" type="number" value="5">
+
+<p>Angle θ (°)</p>
+<input id="weAngle" type="number" value="0">
+
+<p>Initial velocity u (m/s)</p>
+<input id="weU" type="number" value="0">
+
+<p>Mass m (kg)</p>
+<input id="weMass" type="number" value="2">
+
+<button onclick="calculateWorkEnergy()">Calculate</button>
+
+<hr>
+<p>Work W = <span id="weWork">–</span> J</p>
+<p>Initial KE = <span id="weKEi">–</span> J</p>
+<p>Final KE = <span id="weKEf">–</span> J</p>
+
+<canvas id="weCanvas" width="400" height="160"
+style="border:1px solid black; background:#f9fbff;"></canvas>
+</section>
+
+<footer>
+&copy; 2026 VPhys – The Virtual Physics Lab
+</footer>
+
 <script>
-function calculateWorkEnergy() {
-    const F = +document.getElementById("weForce").value;
-    const s = +document.getElementById("weDisplacement").value;
-    const theta = +document.getElementById("weAngle").value * Math.PI/180;
-    const u = +document.getElementById("weU").value;
-    const m = +document.getElementById("weMass").value;
+document.addEventListener("DOMContentLoaded", function(){
 
-    const W = F * s * Math.cos(theta);
-    const KEi = 0.5 * m * u * u;
-    const KEf = KEi + W;
+/* ===== PROJECTILE MOTION (UNCHANGED LOGIC) ===== */
+const canvas = document.getElementById("sim");
+const ctx = canvas.getContext("2d");
+const groundY = canvas.height - 20;
 
-    document.getElementById("weWork").innerText = W.toFixed(2);
-    document.getElementById("weKEi").innerText = KEi.toFixed(2);
-    document.getElementById("weKEf").innerText = KEf.toFixed(2);
+let platformY = groundY;
+let path=[], dragIndex=0, dragging=false, animIndex=0, animating=false;
 
-    drawWE(theta);
+window.launch = function(){
+  const u = +uInput.value;
+  const theta = +thetaInput.value * Math.PI/180;
+  const g = +env.value;
+  const h = +platformH.value;
+
+  platformY = groundY - h*5;
+  const ux = u*Math.cos(theta);
+  const uy = u*Math.sin(theta);
+
+  path=[{x:0,y:h,ux,uy,t:0}];
+  for(let t=0.05;t<30;t+=0.05){
+    const x=ux*t, y=h+uy*t-0.5*g*t*t;
+    if(y<0) break;
+    path.push({x,y,ux,uy,t});
+  }
+  animIndex=0; animating=true; animate();
+};
+
+function animate(){
+  if(!animating) return;
+  dragIndex=animIndex; draw();
+  animIndex++;
+  if(animIndex>=path.length){ animating=false; dragging=true; return; }
+  requestAnimationFrame(animate);
 }
 
-function drawWE(theta) {
-    const c = document.getElementById("weCanvas");
-    const ctx = c.getContext("2d");
-    ctx.clearRect(0,0,c.width,c.height);
+function draw(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="blue";
+  ctx.fillRect(0,groundY,canvas.width,5);
+  ctx.fillRect(0,platformY,80,5);
 
-    // block
-    ctx.fillStyle="#555";
-    ctx.fillRect(60,90,50,30);
-
-    // displacement
-    ctx.strokeStyle="blue";
+  ctx.fillStyle="black";
+  path.forEach(p=>{
     ctx.beginPath();
-    ctx.moveTo(110,105);
-    ctx.lineTo(320,105);
-    ctx.stroke();
-    ctx.fillText("Displacement",200,95);
+    ctx.arc(p.x*5,groundY-p.y*5,2,0,Math.PI*2);
+    ctx.fill();
+  });
 
-    // force arrow
-    ctx.strokeStyle="red";
-    const fx = 70*Math.cos(theta);
-    const fy = -70*Math.sin(theta);
-    ctx.beginPath();
-    ctx.moveTo(85,90);
-    ctx.lineTo(85+fx,90+fy);
-    ctx.stroke();
-    ctx.fillText("Force",85+fx+5,90+fy);
+  if(!path.length) return;
+  const p=path[dragIndex];
+  ctx.fillStyle="red";
+  ctx.beginPath();
+  ctx.arc(p.x*5,groundY-p.y*5,6,0,Math.PI*2);
+  ctx.fill();
+
+  const vy=p.uy-(+env.value)*p.t;
+  time.textContent=p.t.toFixed(2);
+  sx.textContent=p.x.toFixed(2);
+  sy.textContent=p.y.toFixed(2);
+  vx.textContent=p.ux.toFixed(2);
+  vyEl.textContent=vy.toFixed(2);
+  vr.textContent=Math.sqrt(p.ux*p.ux+vy*vy).toFixed(2);
 }
+
+canvas.addEventListener("pointerdown",()=>dragging=true);
+canvas.addEventListener("pointerup",()=>dragging=false);
+canvas.addEventListener("pointermove",e=>{
+  if(!dragging) return;
+  const x=(e.clientX-canvas.getBoundingClientRect().left)/5;
+  let c=0;
+  path.forEach((p,i)=>{ if(Math.abs(p.x-x)<Math.abs(path[c].x-x)) c=i; });
+  dragIndex=c; draw();
+});
+
+/* ===== WORK–ENERGY ===== */
+window.calculateWorkEnergy = function(){
+  const F=+weForce.value, s=+weDisplacement.value;
+  const t=+weAngle.value*Math.PI/180;
+  const u=+weU.value, m=+weMass.value;
+  const W=F*s*Math.cos(t);
+  const KEi=0.5*m*u*u;
+  weWork.textContent=W.toFixed(2);
+  weKEi.textContent=KEi.toFixed(2);
+  weKEf.textContent=(KEi+W).toFixed(2);
+};
+
+/* refs */
+const uInput=u, thetaInput=theta, platformH=platformH;
+const env=document.getElementById("env");
+const time=document.getElementById("time");
+const sx=document.getElementById("sx");
+const sy=document.getElementById("sy");
+const vx=document.getElementById("vx");
+const vyEl=document.getElementById("vy");
+const vr=document.getElementById("vr");
+
+});
 </script>
+
+</body>
+</html>
