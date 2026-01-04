@@ -211,13 +211,12 @@ function animate() {
 function draw() {
     ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    // ground
-    ctx.fillRect(0, groundY, canvas.width, 5);
+    // platforms (BLUE)
+    ctx.fillStyle = "blue";
+    ctx.fillRect(0, groundY, canvas.width, 5);   // landing ground
+    ctx.fillRect(0, platformY, 80, 5);           // launch platform
 
-    // launch platform (small)
-    ctx.fillRect(0, platformY, 80, 5);
-
-    // trajectory
+    // trajectory (BLACK)
     ctx.fillStyle = "black";
     path.forEach(p=>{
         ctx.beginPath();
@@ -227,7 +226,7 @@ function draw() {
 
     const p = path[dragIndex];
 
-    // ball
+    // ball (RED)
     ctx.fillStyle = "red";
     ctx.beginPath();
     ctx.arc(p.x*5, groundY - p.y*5, 6, 0, Math.PI*2);
