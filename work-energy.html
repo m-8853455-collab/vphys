@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Work–Energy Problem Solver | VPhys</title>
+<title>Guided Work–Energy Solver | VPhys</title>
 
 <style>
 body {
@@ -20,18 +20,12 @@ section {
   background: white;
   margin: 15px auto;
   padding: 15px;
-  width: 90%;
+  width: 92%;
   border-radius: 8px;
 }
-label {
-  font-weight: bold;
-}
-input, select, button {
-  margin: 6px 0;
-  padding: 6px;
-  width: 100%;
-}
 button {
+  padding: 8px 12px;
+  margin-top: 10px;
   background: #1e3a8a;
   color: white;
   border: none;
@@ -39,165 +33,190 @@ button {
 }
 .box {
   background: #f4f6ff;
-  padding: 10px;
+  padding: 12px;
   border-left: 4px solid #1e3a8a;
+  margin-top: 10px;
 }
+input {
+  width: 100%;
+  padding: 6px;
+  margin: 4px 0;
+}
+.hidden { display: none; }
 </style>
 </head>
 
 <body>
 
 <header>
-<h1>Work–Energy Problem Solver</h1>
-<p>Step-by-step exam-style solutions</p>
+<h1>Guided Work–Energy Theorem Solver</h1>
+<p>Learn HOW to solve, not just the answer</p>
 </header>
 
 <section>
 <h2>1️⃣ Select Problem Type</h2>
-<select id="problemType">
+<select id="ptype" onchange="selectProblem()">
   <option value="">-- Select --</option>
   <option value="incline">Inclined Plane with Friction</option>
-  <option value="spring">Falling Object + Spring</option>
-  <option value="pulley">Pulley with Friction</option>
+  <option value="spring">Spring Compression (Falling Object)</option>
+  <option value="pulley">Pulley System with Friction</option>
 </select>
 </section>
 
-<section id="inputs" style="display:none;">
-<h2>2️⃣ Enter Values</h2>
+<!-- INPUTS -->
+<section id="inputs" class="hidden">
+<h2>2️⃣ Given Values</h2>
 
-<div id="inclineBox">
-<label>Mass (kg)</label>
-<input id="inc_mass" type="number" value="20">
-
-<label>Angle (degrees)</label>
-<input id="inc_angle" type="number" value="25">
-
-<label>Distance (m)</label>
-<input id="inc_dist" type="number" value="3.8">
-
-<label>Applied Force (N)</label>
-<input id="inc_force" type="number" value="250">
-
-<label>Coefficient of friction μ</label>
-<input id="inc_mu" type="number" value="0.3">
+<div id="inclineInputs" class="hidden">
+Mass (kg): <input id="im" value="20">
+Angle (°): <input id="itheta" value="25">
+Distance (m): <input id="is" value="3.8">
+Force F (N): <input id="iF" value="250">
+Friction μ: <input id="imu" value="0.3">
 </div>
 
-<div id="springBox">
-<label>Mass (kg)</label>
-<input id="spr_mass" type="number" value="2">
-
-<label>Drop height (m)</label>
-<input id="spr_height" type="number" value="0.3">
-
-<label>Spring constant k (N/m)</label>
-<input id="spr_k" type="number" value="2000">
+<div id="springInputs" class="hidden">
+Mass (kg): <input id="sm" value="2">
+Drop height h (m): <input id="sh" value="0.3">
+Spring constant k (N/m): <input id="sk" value="2000">
 </div>
 
-<div id="pulleyBox">
-<label>Mass A (kg)</label>
-<input id="pul_m1" type="number" value="1">
-
-<label>Mass B (kg)</label>
-<input id="pul_m2" type="number" value="2">
-
-<label>Distance moved (m)</label>
-<input id="pul_dist" type="number" value="0.5">
-
-<label>Final speed (m/s)</label>
-<input id="pul_speed" type="number" value="2">
+<div id="pulleyInputs" class="hidden">
+Mass A (kg): <input id="pm1" value="1">
+Mass B (kg): <input id="pm2" value="2">
+Distance moved (m): <input id="pd" value="0.5">
+Final speed (m/s): <input id="pv" value="2">
 </div>
 
-<button onclick="solveProblem()">Solve</button>
+<button onclick="startGuided()">Start Guided Solution</button>
 </section>
 
-<section id="solution" style="display:none;">
-<h2>3️⃣ Solution</h2>
-<div id="output" class="box"></div>
+<!-- GUIDED STEPS -->
+<section id="guided" class="hidden">
+<h2>3️⃣ Guided Solution</h2>
+<div id="guideBox" class="box"></div>
+<button onclick="nextStep()">Next Step</button>
 </section>
 
 <footer>
-<p>© VPhys</p>
+<p>© VPhys – Concept-Based Physics Learning</p>
 </footer>
 
 <script>
+let step = 0;
+let type = "";
 const g = 9.8;
 
-document.getElementById("problemType").addEventListener("change", function () {
-  document.getElementById("inputs").style.display = "block";
-  document.getElementById("solution").style.display = "none";
+function selectProblem() {
+  type = ptype.value;
+  inputs.classList.remove("hidden");
+  guided.classList.add("hidden");
+  step = 0;
 
-  inclineBox.style.display = "none";
-  springBox.style.display = "none";
-  pulleyBox.style.display = "none";
+  inclineInputs.classList.add("hidden");
+  springInputs.classList.add("hidden");
+  pulleyInputs.classList.add("hidden");
 
-  if (this.value === "incline") inclineBox.style.display = "block";
-  if (this.value === "spring") springBox.style.display = "block";
-  if (this.value === "pulley") pulleyBox.style.display = "block";
-});
+  if (type === "incline") inclineInputs.classList.remove("hidden");
+  if (type === "spring") springInputs.classList.remove("hidden");
+  if (type === "pulley") pulleyInputs.classList.remove("hidden");
+}
 
-function solveProblem() {
-  const type = document.getElementById("problemType").value;
-  let text = "";
+function startGuided() {
+  guided.classList.remove("hidden");
+  step = 0;
+  nextStep();
+}
 
+function nextStep() {
+  const box = guideBox;
+
+  /* ---------- INCLINED PLANE ---------- */
   if (type === "incline") {
-    const m = +inc_mass.value;
-    const theta = inc_angle.value * Math.PI / 180;
-    const s = +inc_dist.value;
-    const F = +inc_force.value;
-    const mu = +inc_mu.value;
+    const m = +im.value;
+    const θ = itheta.value * Math.PI / 180;
+    const s = +is.value;
+    const F = +iF.value;
+    const μ = +imu.value;
 
-    const N = m * g * Math.cos(theta);
-    const friction = mu * N;
+    const N = m * g * Math.cos(θ);
+    const fk = μ * N;
 
-    const W_F = F * s;
-    const W_g = -m * g * s * Math.sin(theta);
-    const W_f = -friction * s;
-    const W_total = W_F + W_g + W_f;
+    if (step === 0)
+      box.innerHTML = "<b>Step 1: Motion</b><br>The box moves UP the plane. Gravity and friction oppose motion.";
 
-    text = `
-    Forces doing work: Applied force, gravity, friction<br><br>
-    Work by force F = ${W_F.toFixed(2)} J<br>
-    Work by gravity = ${W_g.toFixed(2)} J<br>
-    Work by friction = ${W_f.toFixed(2)} J<br><br>
-    <b>Total work = ${W_total.toFixed(2)} J</b>
-    `;
+    if (step === 1)
+      box.innerHTML = "<b>Step 2: Forces Doing Work</b><br>✔ Applied force (+)<br>✔ Gravity (−)<br>✔ Friction (−)<br>✖ Normal (0)";
+
+    if (step === 2)
+      box.innerHTML = "<b>Step 3: Work–Energy Equation</b><br>W<sub>F</sub> + W<sub>g</sub> + W<sub>f</sub> = ΔKE";
+
+    if (step === 3)
+      box.innerHTML =
+        `W<sub>F</sub> = Fs = ${(F*s).toFixed(2)} J<br>
+         W<sub>g</sub> = −mg s sinθ = ${(-m*g*s*Math.sin(θ)).toFixed(2)} J<br>
+         W<sub>f</sub> = −μN s = ${(-fk*s).toFixed(2)} J`;
+
+    if (step === 4)
+      box.innerHTML =
+        `<b>Total Work = ${(F*s - m*g*s*Math.sin(θ) - fk*s).toFixed(2)} J</b><br>
+         This equals change in kinetic energy.`;
+
   }
 
+  /* ---------- SPRING ---------- */
   if (type === "spring") {
-    const m = +spr_mass.value;
-    const h = +spr_height.value;
-    const k = +spr_k.value;
+    const m = +sm.value;
+    const h = +sh.value;
+    const k = +sk.value;
 
-    const v = Math.sqrt(2 * g * h);
-    const x = Math.sqrt((2 * m * g * h) / k);
+    if (step === 0)
+      box.innerHTML = "<b>Step 1:</b> Object falls from rest → gains gravitational energy.";
 
-    text = `
-    Just before spring: KE = mgh<br>
-    Energy equation: mgh = ½kx²<br><br>
-    Speed before impact = ${v.toFixed(2)} m/s<br>
-    <b>Maximum compression x = ${x.toFixed(3)} m</b>
-    `;
+    if (step === 1)
+      box.innerHTML = "<b>Step 2:</b> At maximum compression, velocity = 0 → KE = 0.";
+
+    if (step === 2)
+      box.innerHTML = "<b>Step 3:</b> Use energy conservation:<br>mgh = ½kx²";
+
+    if (step === 3)
+      box.innerHTML =
+        `Substitute values:<br>
+         (${m})(9.8)(${h}) = ½(${k})x²`;
+
+    if (step === 4)
+      box.innerHTML =
+        `<b>x = ${Math.sqrt((2*m*g*h)/k).toFixed(3)} m</b><br>
+         Negative root rejected (no physical meaning).`;
   }
 
+  /* ---------- PULLEY ---------- */
   if (type === "pulley") {
-    const m1 = +pul_m1.value;
-    const m2 = +pul_m2.value;
-    const d = +pul_dist.value;
-    const v = +pul_speed.value;
+    const m1 = +pm1.value;
+    const m2 = +pm2.value;
+    const d = +pd.value;
+    const v = +pv.value;
 
-    const deltaKE = 0.5 * (m1 + m2) * v * v;
-    const deltaPE = m2 * g * d;
-    const W_fric = deltaKE - deltaPE;
+    if (step === 0)
+      box.innerHTML = "<b>Step 1:</b> System starts from rest.";
 
-    text = `
-    Change in KE = ${deltaKE.toFixed(2)} J<br>
-    Change in PE = ${deltaPE.toFixed(2)} J<br><br>
-    <b>Work done by friction = ${W_fric.toFixed(2)} J</b>
-    `;
+    if (step === 1)
+      box.innerHTML = "<b>Step 2:</b> Loss of PE of hanging mass = work input.";
+
+    if (step === 2)
+      box.innerHTML = "<b>Step 3:</b> Work–Energy equation:<br>ΔPE + W<sub>f</sub> = ΔKE";
+
+    if (step === 3)
+      box.innerHTML =
+        `ΔKE = ½(m₁+m₂)v² = ${(0.5*(m1+m2)*v*v).toFixed(2)} J<br>
+         ΔPE = m₂gd = ${(m2*g*d).toFixed(2)} J`;
+
+    if (step === 4)
+      box.innerHTML =
+        `<b>Work by friction = ${(0.5*(m1+m2)*v*v - m2*g*d).toFixed(2)} J</b>`;
   }
 
-  output.innerHTML = text;
-  document.getElementById("solution").style.display = "block";
+  step++;
 }
 </script>
 
