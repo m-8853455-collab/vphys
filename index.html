@@ -60,35 +60,31 @@
 </section>
 
 <section>
-    <h2>Projectile Motion (VPhys)</h2>
+<h2>Advanced Projectile Motion – VPhys</h2>
 
-    <p>Initial velocity (m/s):</p>
-    <input type="number" id="v" value="20">
+<p>Initial speed u (m/s):</p>
+<input type="number" id="u" value="20">
 
-    <p>Angle (degrees):</p>
-    <input type="number" id="a" value="45"><br><br>
+<p>Angle θ (degrees):</p>
+<input type="number" id="theta" value="45">
 
-    <button onclick="simulate()">Simulate</button><br><br>
+<p>Environment:</p>
+<select id="env">
+  <option value="9.8">Earth</option>
+  <option value="1.62">Moon</option>
+</select>
 
-    <canvas id="c" width="400" height="200"
-        style="border:1px solid black;"></canvas>
+<br><br>
+<button onclick="launch()">Launch</button>
+
+<canvas id="sim" width="500" height="300"
+ style="border:1px solid black; touch-action:none;"></canvas>
+
+<p><strong>Real-time data (drag the red point):</strong></p>
+<p>x = <span id="px">–</span> m</p>
+<p>y = <span id="py">–</span> m</p>
+<p>Resultant velocity v = <span id="vr">–</span> m/s</p>
 </section>
-    <div id="motionSim" style="display:none; margin-top:20px;">
-    <p><strong>Projectile Motion Simulator</strong></p>
-
-    <label>Initial Velocity (m/s): </label>
-    <input type="number" id="velocity" value="20"><br><br>
-
-    <label>Angle (degrees): </label>
-    <input type="number" id="angle" value="45"><br><br>
-
-    <button onclick="startSimulation()">Simulate</button><br><br>
-
-    <canvas id="canvas" width="400" height="200"
-        style="border:1px solid black;"></canvas>
-</div>
-
-<section>
     <h2>Why Choose VPhys?</h2>
     <ul>
         <li>Interactive and visual learning</li>
@@ -109,43 +105,83 @@
 </footer>
 
 <script>
-function simulate() {
-    const c = document.getElementById("c");
-    const ctx = c.getContext("2d");
+const canvas = document.getElementById("sim");
+const ctx = canvas.getContext("2d");
 
-    const v = Number(document.getElementById("v").value);
-    const a = Number(document.getElementById("a").value) * Math.PI / 180;
-    const g = 9.8;
+let path = [];
+let dragging = false;
+let dragIndex = 0;
 
-    let t = 0;
-    let dots = [];
+function launch() {
+    const u = Number(document.getElementById("u").value);
+    const theta = Number(document.getElementById("theta").value) * Math.PI/180;
+    const g = Number(document.getElementById("env").value);
 
-    const loop = setInterval(() => {
-        ctx.clearRect(0, 0, c.width, c.height);
+    const ux = u * Math.cos(theta);
+    const uy = u * Math.sin(theta);
 
-        const x = v * Math.cos(a) * t;
-        const y = v * Math.sin(a) * t - 0.5 * g * t * t;
+    path = [];
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-        if (y < 0) {
-            clearInterval(loop);
-            return;
-        }
+    for (let t=0; t<10; t+=0.05) {
+        const x = ux * t;
+        const y = uy * t - 0.5 * g * t * t;
+        if (y < 0) break;
+        path.push({x, y, ux, uy, t});
+    }
 
-        dots.push({ x: x * 5, y: c.height - y * 5 });
-
-        // dotted path
-        dots.forEach(p => {
-            ctx.beginPath();
-            ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-            ctx.fill();
-        });
-
-        // moving ball
-        ctx.beginPath();
-        ctx.arc(x * 5, c.height - y * 5, 5, 0, Math.PI * 2);
-        ctx.fill();
-
-        t += 0.1;
-    }, 50);
+    draw();
 }
+
+function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // platform
+    ctx.fillRect(0, canvas.height-20, canvas.width, 5);
+
+    // trajectory
+    ctx.fillStyle="black";
+    path.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(p.x*5, canvas.height-p.y*5-20, 2,0,Math.PI*2);
+        ctx.fill();
+    });
+
+    // draggable point
+    const p = path[dragIndex];
+    ctx.fillStyle="red";
+    ctx.beginPath();
+    ctx.arc(p.x*5, canvas.height-p.y*5-20, 6,0,Math.PI*2);
+    ctx.fill();
+
+    updateData(p);
+}
+
+function updateData(p) {
+    const g = Number(document.getElementById("env").value);
+    const vy = p.uy - g*p.t;
+    const vr = Math.sqrt(p.ux*p.ux + vy*vy);
+
+    document.getElementById("px").innerText = p.x.toFixed(2);
+    document.getElementById("py").innerText = p.y.toFixed(2);
+    document.getElementById("vr").innerText = vr.toFixed(2);
+}
+
+canvas.addEventListener("pointerdown", ()=> dragging=true);
+canvas.addEventListener("pointerup", ()=> dragging=false);
+
+canvas.addEventListener("pointermove", (e)=>{
+    if (!dragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left)/5;
+
+    let closest = 0;
+    path.forEach((p,i)=>{
+        if (Math.abs(p.x - x) < Math.abs(path[closest].x - x)) {
+            closest = i;
+        }
+    });
+    dragIndex = closest;
+    draw();
+});
 </script>
