@@ -92,3 +92,19 @@
 </footer>
 
 <script>
+    function showTopic(topic) {
+        let info = "";
+
+        if (topic === "motion") {
+            info = "Motion explains how objects move over time, including speed and acceleration.";
+        } else if (topic === "force") {
+            info = "Force is a push or pull that can change an object’s motion or shape.";
+        } else if (topic === "gravity") {
+            info = "Gravity is the force of attraction between objects with mass.";
+        } else if (topic === "electricity") {
+            info = "Electricity involves the movement of electric charges in a circuit.";
+        }
+
+        document.getElementById("topicInfo").innerText = info;
+    }
+</script>
