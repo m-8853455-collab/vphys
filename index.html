@@ -17,13 +17,14 @@ button {
 }
 footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 
-/* formula table */
-.formula-table { width:100%; border-collapse:collapse; margin-top:15px; }
-.formula-table th, .formula-table td {
-  border:1px solid #333; padding:8px; text-align:center;
+.formula-table {
+  width:100%; border-collapse:collapse; margin-top:10px;
+}
+.formula-table th,.formula-table td {
+  border:1px solid #333; padding:6px; text-align:center;
 }
 .formula-table th { background:#1e3a8a; color:white; }
-.formula-table td { font-family:"Courier New", monospace; font-size:14px; }
+.formula-table td { font-family:Courier New, monospace; }
 </style>
 </head>
 
@@ -53,13 +54,13 @@ footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 <h3>Projectile Inputs</h3>
 
 <p>Initial speed u (m/s)</p>
-<input type="number" id="u" value="20">
+<input id="u" type="number" value="20">
 
 <p>Launch angle θ (°)</p>
-<input type="number" id="theta" value="45">
+<input id="theta" type="number" value="45">
 
 <p>Platform height h (m)</p>
-<input type="number" id="platformH" value="5">
+<input id="platformH" type="number" value="5">
 
 <p>Environment</p>
 <select id="env">
@@ -86,7 +87,7 @@ footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 
 <section>
 <h2>Work–Energy Theorem</h2>
-<p>W = F s cosθ = ΔKE</p>
+<p><b>W = F s cosθ = ΔKE</b></p>
 
 <p>Force (N)</p><input id="weForce" value="10">
 <p>Displacement (m)</p><input id="weDisplacement" value="5">
@@ -104,84 +105,127 @@ footer { background:#1e3a8a; color:white; text-align:center; padding:10px; }
 <footer>© 2026 VPhys – The Virtual Physics Lab</footer>
 
 <script>
-const canvas=document.getElementById("sim");
-const ctx=canvas.getContext("2d");
+const canvas = document.getElementById("sim");
+const ctx = canvas.getContext("2d");
 
-const groundY=canvas.height-20;
-let scale=5, platformY=groundY;
-let path=[], dragIndex=0, dragging=false, animIndex=0, animating=false;
+const groundY = canvas.height - 20;
+let scale = 5;
 
-function zoomIn(){ scale*=1.2; draw(); }
-function zoomOut(){ scale/=1.2; draw(); }
+let path = [];
+let dragIndex = 0;
+let dragging = false;
+let animIndex = 0;
+let animating = false;
 
-function launch(){
-  const u=+u.value, th=+theta.value*Math.PI/180;
-  const g=+env.value, h=+platformH.value;
-  const ux=u*Math.cos(th), uy=u*Math.sin(th);
+/* ---------- ZOOM ---------- */
+function zoomIn(){ scale *= 1.2; draw(); }
+function zoomOut(){ scale /= 1.2; draw(); }
 
-  platformY=groundY-h*scale;
-  path=[{x:0,y:h,ux,uy,t:0}];
+/* ---------- START ---------- */
+function launch() {
+  const u = +document.getElementById("u").value;
+  const theta = +document.getElementById("theta").value * Math.PI/180;
+  const g = +document.getElementById("env").value;
+  const h = +document.getElementById("platformH").value;
+
+  const ux = u * Math.cos(theta);
+  const uy = u * Math.sin(theta);
+
+  path = [{x:0, y:h, ux, uy, t:0}];
   for(let t=0.05;t<30;t+=0.05){
-    const x=ux*t, y=h+uy*t-0.5*g*t*t;
-    if(y<0) break;
+    const x = ux*t;
+    const y = h + uy*t - 0.5*g*t*t;
+    if(y < 0) break;
     path.push({x,y,ux,uy,t});
   }
-  animIndex=0; animating=true; dragging=false; animate();
+
+  dragIndex = 0;
+  animIndex = 0;
+  animating = true;
+  dragging = false;
+  animate();
 }
 
+/* ---------- ANIMATION ---------- */
 function animate(){
   if(!animating) return;
-  dragIndex=animIndex; draw();
-  if(++animIndex>=path.length){ animating=false; dragging=true; }
+  dragIndex = animIndex;
+  draw();
+  animIndex++;
+  if(animIndex >= path.length){
+    animating = false;
+    dragging = true;
+    return;
+  }
   requestAnimationFrame(animate);
 }
 
+/* ---------- DRAW ---------- */
 function draw(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle="blue";
-  ctx.fillRect(0,groundY,canvas.width,5);
-  ctx.fillRect(0,platformY,80,5);
 
-  ctx.fillStyle="black";
+  // ground
+  ctx.fillStyle = "blue";
+  ctx.fillRect(0, groundY, canvas.width, 5);
+
+  if(path.length){
+    const platformY = groundY - path[0].y * scale;
+    ctx.fillRect(0, platformY, 80, 5);
+  }
+
+  // trajectory
+  ctx.fillStyle = "black";
   path.forEach(p=>{
     ctx.beginPath();
-    ctx.arc(p.x*scale,groundY-p.y*scale,2,0,Math.PI*2);
+    ctx.arc(p.x*scale, groundY - p.y*scale, 2, 0, Math.PI*2);
     ctx.fill();
   });
 
   if(!path.length) return;
-  const p=path[dragIndex];
-  ctx.fillStyle="red";
+  const p = path[dragIndex];
+
+  // ball
+  ctx.fillStyle = "red";
   ctx.beginPath();
-  ctx.arc(p.x*scale,groundY-p.y*scale,6,0,Math.PI*2);
+  ctx.arc(p.x*scale, groundY - p.y*scale, 6, 0, Math.PI*2);
   ctx.fill();
 
-  const vy=p.uy-(+env.value)*p.t;
-  time.textContent=p.t.toFixed(2);
-  sx.textContent=p.x.toFixed(2);
-  sy.textContent=p.y.toFixed(2);
-  vx.textContent=p.ux.toFixed(2);
-  vySpan=vy.toFixed(2); document.getElementById("vy").textContent=vySpan;
-  vr.textContent=Math.sqrt(p.ux*p.ux+vy*vy).toFixed(2);
+  const g = +document.getElementById("env").value;
+  const vy = p.uy - g*p.t;
+
+  document.getElementById("time").textContent = p.t.toFixed(2);
+  document.getElementById("sx").textContent = p.x.toFixed(2);
+  document.getElementById("sy").textContent = p.y.toFixed(2);
+  document.getElementById("vx").textContent = p.ux.toFixed(2);
+  document.getElementById("vy").textContent = vy.toFixed(2);
+  document.getElementById("vr").textContent =
+    Math.sqrt(p.ux*p.ux + vy*vy).toFixed(2);
 }
 
-canvas.addEventListener("pointerdown",()=>{ if(!animating) dragging=true; });
-canvas.addEventListener("pointerup",()=>dragging=false);
-canvas.addEventListener("pointermove",e=>{
+/* ---------- DRAG ---------- */
+canvas.addEventListener("pointerdown", ()=>{ if(!animating) dragging=true; });
+canvas.addEventListener("pointerup", ()=> dragging=false);
+canvas.addEventListener("pointermove", e=>{
   if(!dragging) return;
-  const x=(e.clientX-canvas.getBoundingClientRect().left)/scale;
-  let c=0; path.forEach((p,i)=>{ if(Math.abs(p.x-x)<Math.abs(path[c].x-x)) c=i; });
-  dragIndex=c; draw();
+  const x = (e.clientX - canvas.getBoundingClientRect().left)/scale;
+  let closest = 0;
+  path.forEach((p,i)=>{
+    if(Math.abs(p.x-x) < Math.abs(path[closest].x-x)) closest=i;
+  });
+  dragIndex = closest;
+  draw();
 });
 
+/* ---------- WORK–ENERGY ---------- */
 function calculateWorkEnergy(){
   const F=+weForce.value, s=+weDisplacement.value;
   const th=+weAngle.value*Math.PI/180;
   const u=+weU.value, m=+weMass.value;
-  const W=F*s*Math.cos(th), KEi=0.5*m*u*u, KEf=KEi+W;
+  const W=F*s*Math.cos(th);
+  const KEi=0.5*m*u*u;
   weWork.textContent=W.toFixed(2);
   weKEi.textContent=KEi.toFixed(2);
-  weKEf.textContent=KEf.toFixed(2);
+  weKEf.textContent=(KEi+W).toFixed(2);
 }
 </script>
 
