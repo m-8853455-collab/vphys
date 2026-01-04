@@ -60,15 +60,18 @@
 </section>
 
 <section>
-    <h2>Explore Physics Topics</h2>
-    <p>Click a topic to learn more:</p>
+    <h2>Projectile Motion (VPhys)</h2>
 
-    <button onclick="showTopic('motion')">Motion</button>
-    <button onclick="showTopic('force')">Force</button>
-    <button onclick="showTopic('gravity')">Gravity</button>
-    <button onclick="showTopic('electricity')">Electricity</button>
+    <p>Initial velocity (m/s):</p>
+    <input type="number" id="v" value="20">
 
-    <p id="topicInfo" style="margin-top:15px; font-weight:bold;"></p>
+    <p>Angle (degrees):</p>
+    <input type="number" id="a" value="45"><br><br>
+
+    <button onclick="simulate()">Simulate</button><br><br>
+
+    <canvas id="c" width="400" height="200"
+        style="border:1px solid black;"></canvas>
 </section>
     <div id="motionSim" style="display:none; margin-top:20px;">
     <p><strong>Projectile Motion Simulator</strong></p>
@@ -106,65 +109,43 @@
 </footer>
 
 <script>
-    function showTopic(topic) {
-        document.getElementById("motionSim").style.display = "none";
-        let info = "";
+function simulate() {
+    const c = document.getElementById("c");
+    const ctx = c.getContext("2d");
 
-        if (topic === "motion") {
-            info = "Projectile motion occurs when an object is launched at an angle under gravity.";
-            document.getElementById("motionSim").style.display = "block";
-        } else if (topic === "force") {
-            info = "Force is a push or pull that can change an object’s motion.";
-        } else if (topic === "gravity") {
-            info = "Gravity is the force of attraction between objects with mass.";
-        } else if (topic === "electricity") {
-            info = "Electricity involves the movement of electric charges in a circuit.";
+    const v = Number(document.getElementById("v").value);
+    const a = Number(document.getElementById("a").value) * Math.PI / 180;
+    const g = 9.8;
+
+    let t = 0;
+    let dots = [];
+
+    const loop = setInterval(() => {
+        ctx.clearRect(0, 0, c.width, c.height);
+
+        const x = v * Math.cos(a) * t;
+        const y = v * Math.sin(a) * t - 0.5 * g * t * t;
+
+        if (y < 0) {
+            clearInterval(loop);
+            return;
         }
 
-        document.getElementById("topicInfo").innerText = info;
-    }
+        dots.push({ x: x * 5, y: c.height - y * 5 });
 
-    function startSimulation() {
-        const canvas = document.getElementById("canvas");
-        const ctx = canvas.getContext("2d");
-
-        const v = Number(document.getElementById("velocity").value);
-        const angle = Number(document.getElementById("angle").value) * Math.PI / 180;
-        const g = 9.8;
-
-        let t = 0;
-        let trail = [];
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const interval = setInterval(() => {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            const x = v * Math.cos(angle) * t;
-            const y = v * Math.sin(angle) * t - 0.5 * g * t * t;
-
-            if (y < 0) {
-                clearInterval(interval);
-                return;
-            }
-
-            trail.push({ x: x * 5, y: canvas.height - y * 5 });
-
-            // dotted path
-            ctx.fillStyle = "black";
-            trail.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
-                ctx.fill();
-            });
-
-            // moving ball
-            ctx.fillStyle = "red";
+        // dotted path
+        dots.forEach(p => {
             ctx.beginPath();
-            ctx.arc(x * 5, canvas.height - y * 5, 5, 0, Math.PI * 2);
+            ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
             ctx.fill();
+        });
 
-            t += 0.1;
-        }, 50);
-    }
+        // moving ball
+        ctx.beginPath();
+        ctx.arc(x * 5, c.height - y * 5, 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        t += 0.1;
+    }, 50);
+}
 </script>
