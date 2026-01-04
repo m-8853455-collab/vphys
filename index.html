@@ -38,11 +38,16 @@ h2, h3 {
     color: #1e3a8a;
 }
 button {
-    padding: 8px 12px;
+    padding: 8px 14px;
     background: #1e3a8a;
     color: white;
     border: none;
     border-radius: 5px;
+    margin-top: 10px;
+    cursor: pointer;
+}
+button:hover {
+    background: #16307a;
 }
 footer {
     background: #1e3a8a;
@@ -96,6 +101,8 @@ footer {
     <option value="9.8">Earth</option>
     <option value="1.62">Moon</option>
 </select>
+
+<button onclick="launch()">▶ Start</button>
 </section>
 
 </div>
@@ -137,7 +144,7 @@ let dragging = false;
 let animIndex = 0;
 let animating = false;
 
-/* ---------- LAUNCH & CALCULATE ---------- */
+/* ---------- START / LAUNCH ---------- */
 function launch() {
     const u = Number(document.getElementById("u").value);
     const thetaDeg = Number(document.getElementById("theta").value);
@@ -189,7 +196,7 @@ function animate() {
     animIndex++;
     if (animIndex >= path.length) {
         animating = false;
-        dragging = true; // enable dragging AFTER motion
+        dragging = true; // enable drag after motion
         return;
     }
 
@@ -241,11 +248,6 @@ canvas.addEventListener("pointermove", e=>{
     });
     dragIndex = closest;
     draw();
-});
-
-/* ---------- AUTO RUN ---------- */
-["u","theta","platformH","env"].forEach(id=>{
-    document.getElementById(id).addEventListener("input", launch);
 });
 
 /* ---------- FORCE ---------- */
