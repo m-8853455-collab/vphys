@@ -44,6 +44,7 @@
         }
     </style>
 </head>
+
 <body>
 
 <header>
@@ -60,31 +61,33 @@
 </section>
 
 <section>
-<h2>Advanced Projectile Motion – VPhys</h2>
+    <h2>Advanced Projectile Motion – VPhys</h2>
 
-<p>Initial speed u (m/s):</p>
-<input type="number" id="u" value="20">
+    <p>Initial speed, u (m/s):</p>
+    <input type="number" id="u" value="20">
 
-<p>Angle θ (degrees):</p>
-<input type="number" id="theta" value="45">
+    <p>Angle, θ (degrees):</p>
+    <input type="number" id="theta" value="45">
 
-<p>Environment:</p>
-<select id="env">
-  <option value="9.8">Earth</option>
-  <option value="1.62">Moon</option>
-</select>
+    <p>Environment:</p>
+    <select id="env">
+        <option value="9.8">Earth</option>
+        <option value="1.62">Moon</option>
+    </select>
 
-<br><br>
-<button onclick="launch()">Launch</button>
+    <br><br>
+    <button onclick="launch()">Launch</button>
 
-<canvas id="sim" width="500" height="300"
- style="border:1px solid black; touch-action:none;"></canvas>
+    <canvas id="sim" width="500" height="300"
+        style="border:1px solid black; touch-action:none;"></canvas>
 
-<p><strong>Real-time data (drag the red point):</strong></p>
-<p>x = <span id="px">–</span> m</p>
-<p>y = <span id="py">–</span> m</p>
-<p>Resultant velocity v = <span id="vr">–</span> m/s</p>
+    <p><strong>Real-time data (drag the red point):</strong></p>
+    <p>x = <span id="px">–</span> m</p>
+    <p>y = <span id="py">–</span> m</p>
+    <p>Resultant velocity, v = <span id="vr">–</span> m/s</p>
 </section>
+
+<section>
     <h2>Why Choose VPhys?</h2>
     <ul>
         <li>Interactive and visual learning</li>
@@ -93,33 +96,33 @@
         <li>Student-centred learning approach</li>
     </ul>
 </section>
-    <section>
-<h2>Force Simulator – VPhys</h2>
-
-<p>Mass (kg):</p>
-<input type="number" id="mass" value="2">
-
-<p>Force applied (N):</p>
-<input type="number" id="force" value="10"><br><br>
-
-<button onclick="calculateForce()">Calculate</button>
-
-<p>Acceleration, a = <span id="acc">–</span> m/s²</p>
-</section>
-
 
 <section>
-<h2>Electricity Simulator – VPhys</h2>
+    <h2>Force Simulator – VPhys</h2>
 
-<p>Voltage (V):</p>
-<input type="number" id="voltage" value="12">
+    <p>Mass (kg):</p>
+    <input type="number" id="mass" value="2">
 
-<p>Resistance (Ω):</p>
-<input type="number" id="resistance" value="6"><br><br>
+    <p>Force applied (N):</p>
+    <input type="number" id="force" value="10"><br><br>
 
-<button onclick="calculateCurrent()">Calculate</button>
+    <button onclick="calculateForce()">Calculate</button>
 
-<p>Current, I = <span id="current">–</span> A</p>
+    <p>Acceleration, a = <span id="acc">–</span> m/s²</p>
+</section>
+
+<section>
+    <h2>Electricity Simulator – VPhys</h2>
+
+    <p>Voltage (V):</p>
+    <input type="number" id="voltage" value="12">
+
+    <p>Resistance (Ω):</p>
+    <input type="number" id="resistance" value="6"><br><br>
+
+    <button onclick="calculateCurrent()">Calculate</button>
+
+    <p>Current, I = <span id="current">–</span> A</p>
 </section>
 
 <section>
@@ -135,6 +138,7 @@
 <script>
 const canvas = document.getElementById("sim");
 const ctx = canvas.getContext("2d");
+const platformY = canvas.height - 20;
 
 let path = [];
 let dragging = false;
@@ -142,44 +146,44 @@ let dragIndex = 0;
 
 function launch() {
     const u = Number(document.getElementById("u").value);
-    const theta = Number(document.getElementById("theta").value) * Math.PI/180;
+    const theta = Number(document.getElementById("theta").value) * Math.PI / 180;
     const g = Number(document.getElementById("env").value);
 
     const ux = u * Math.cos(theta);
     const uy = u * Math.sin(theta);
 
     path = [];
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    for (let t=0; t<10; t+=0.05) {
+    for (let t = 0; t < 10; t += 0.05) {
         const x = ux * t;
         const y = uy * t - 0.5 * g * t * t;
         if (y < 0) break;
-        path.push({x, y, ux, uy, t});
+        path.push({ x, y, ux, uy, t });
     }
 
     draw();
 }
 
 function draw() {
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // platform
-    ctx.fillRect(0, canvas.height-20, canvas.width, 5);
+    ctx.fillRect(0, platformY, canvas.width, 5);
 
     // trajectory
-    ctx.fillStyle="black";
-    path.forEach(p=>{
+    ctx.fillStyle = "black";
+    path.forEach(p => {
         ctx.beginPath();
-        ctx.arc(p.x*5, canvas.height-p.y*5-20, 2,0,Math.PI*2);
+        ctx.arc(p.x * 5, platformY - p.y * 5, 2, 0, Math.PI * 2);
         ctx.fill();
     });
 
     // draggable point
     const p = path[dragIndex];
-    ctx.fillStyle="red";
+    ctx.fillStyle = "red";
     ctx.beginPath();
-    ctx.arc(p.x*5, canvas.height-p.y*5-20, 6,0,Math.PI*2);
+    ctx.arc(p.x * 5, platformY - p.y * 5, 6, 0, Math.PI * 2);
     ctx.fill();
 
     updateData(p);
@@ -187,29 +191,47 @@ function draw() {
 
 function updateData(p) {
     const g = Number(document.getElementById("env").value);
-    const vy = p.uy - g*p.t;
-    const vr = Math.sqrt(p.ux*p.ux + vy*vy);
+    const vy = p.uy - g * p.t;
+    const vr = Math.sqrt(p.ux * p.ux + vy * vy);
 
     document.getElementById("px").innerText = p.x.toFixed(2);
     document.getElementById("py").innerText = p.y.toFixed(2);
     document.getElementById("vr").innerText = vr.toFixed(2);
 }
 
-canvas.addEventListener("pointerdown", ()=> dragging=true);
-canvas.addEventListener("pointerup", ()=> dragging=false);
+canvas.addEventListener("pointerdown", () => dragging = true);
+canvas.addEventListener("pointerup", () => dragging = false);
 
-canvas.addEventListener("pointermove", (e)=>{
+canvas.addEventListener("pointermove", (e) => {
     if (!dragging) return;
     const rect = canvas.getBoundingClientRect();
-    const x = (e.clientX - rect.left)/5;
+    const x = (e.clientX - rect.left) / 5;
 
     let closest = 0;
-    path.forEach((p,i)=>{
+    path.forEach((p, i) => {
         if (Math.abs(p.x - x) < Math.abs(path[closest].x - x)) {
             closest = i;
         }
     });
+
     dragIndex = closest;
     draw();
 });
+
+function calculateForce() {
+    const m = Number(document.getElementById("mass").value);
+    const F = Number(document.getElementById("force").value);
+    const a = F / m;
+    document.getElementById("acc").innerText = a.toFixed(2);
+}
+
+function calculateCurrent() {
+    const V = Number(document.getElementById("voltage").value);
+    const R = Number(document.getElementById("resistance").value);
+    const I = V / R;
+    document.getElementById("current").innerText = I.toFixed(2);
+}
 </script>
+
+</body>
+</html>
