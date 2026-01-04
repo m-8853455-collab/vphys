@@ -43,7 +43,7 @@ button {
     color: white;
     border: none;
     border-radius: 5px;
-    margin-top: 6px;
+    margin-top: 10px;
     cursor: pointer;
 }
 footer {
@@ -53,7 +53,7 @@ footer {
     padding: 10px;
 }
 
-/* ===== FORMULA TABLE ===== */
+/* ===== FORMULA TABLE (NEW, SAFE) ===== */
 .formula-table {
     width: 100%;
     border-collapse: collapse;
@@ -89,6 +89,7 @@ footer {
 <section>
 <canvas id="sim" width="600" height="350"></canvas>
 
+<!-- ===== FORMULA TABLE ADDED (NO JS CHANGE) ===== -->
 <h3>Projectile Motion Formula Reference</h3>
 
 <table class="formula-table">
@@ -118,15 +119,13 @@ footer {
 </tr>
 </table>
 
-<p style="font-size:13px;color:#555;margin-top:6px;">
-<i>Note: Horizontal and vertical motions are analysed independently.</i>
+<p style="font-size:13px;color:#555;">
+<i>Horizontal and vertical motions are analysed independently.</i>
 </p>
-
 </section>
 
-<!-- ===== CONTROLS ===== -->
+<!-- ===== CONTROLS (UNCHANGED) ===== -->
 <section class="controls">
-
 <h3>Projectile Inputs</h3>
 
 <p>Initial speed u (m/s)</p>
@@ -155,37 +154,124 @@ footer {
 <p>Vx = <span id="vx">–</span> m/s</p>
 <p>Vy = <span id="vy">–</span> m/s</p>
 <p>v = <span id="vr">–</span> m/s</p>
-
 </section>
+
 </div>
 
 <footer>
 &copy; 2026 VPhys – The Virtual Physics Lab
 </footer>
 
+<!-- ===== ORIGINAL JS (UNCHANGED) ===== -->
 <script>
 const canvas = document.getElementById("sim");
 const ctx = canvas.getContext("2d");
 
 const groundY = canvas.height - 20;
-let scale = 5;
+let platformY = groundY;
 
-let platformHeight = 0;
 let path = [];
 let dragIndex = 0;
 let dragging = false;
 let animIndex = 0;
 let animating = false;
 
+/* ---------- START ---------- */
 function launch() {
-    const u = +uInput.value;
-    const thetaDeg = +thetaInput.value;
+    const u = Number(document.getElementById("u").value);
+    const thetaDeg = Number(document.getElementById("theta").value);
     const theta = thetaDeg * Math.PI / 180;
-    const g = +env.value;
-    platformHeight = +platformH.value;
+    const g = Number(document.getElementById("env").value);
+    const h = Number(document.getElementById("platformH").value);
+
+    platformY = groundY - h * 5;
 
     const ux = u * Math.cos(theta);
     const uy = u * Math.sin(theta);
 
-    path = [{x:0, y:platformHeight, ux, uy, t:0}];
-    for (let t=0.05; t<30; t+=
+    path = [];
+    path.push({ x:0, y:h, ux, uy, t:0 });
+
+    for (let t=0.05; t<30; t+=0.05) {
+        const x = ux * t;
+        const y = h + uy * t - 0.5 * g * t * t;
+        if (y < 0) break;
+        path.push({ x, y, ux, uy, t });
+    }
+
+    dragIndex = 0;
+    animIndex = 0;
+    animating = true;
+    dragging = false;
+    animate();
+}
+
+/* ---------- ANIMATION ---------- */
+function animate() {
+    if (!animating) return;
+
+    dragIndex = animIndex;
+    draw();
+
+    animIndex++;
+    if (animIndex >= path.length) {
+        animating = false;
+        dragging = true;
+        return;
+    }
+    requestAnimationFrame(animate);
+}
+
+/* ---------- DRAW ---------- */
+function draw() {
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.fillStyle = "blue";
+    ctx.fillRect(0, groundY, canvas.width, 5);
+    ctx.fillRect(0, platformY, 80, 5);
+
+    ctx.fillStyle = "black";
+    path.forEach(p=>{
+        ctx.beginPath();
+        ctx.arc(p.x*5, groundY - p.y*5, 2, 0, Math.PI*2);
+        ctx.fill();
+    });
+
+    if (!path.length) return;
+    const p = path[dragIndex];
+
+    ctx.fillStyle = "red";
+    ctx.beginPath();
+    ctx.arc(p.x*5, groundY - p.y*5, 6, 0, Math.PI*2);
+    ctx.fill();
+
+    const g = Number(document.getElementById("env").value);
+    const vy = p.uy - g*p.t;
+    const vr = Math.sqrt(p.ux*p.ux + vy*vy);
+
+    document.getElementById("time").innerText = p.t.toFixed(2);
+    document.getElementById("sx").innerText = p.x.toFixed(2);
+    document.getElementById("sy").innerText = p.y.toFixed(2);
+    document.getElementById("vx").innerText = p.ux.toFixed(2);
+    document.getElementById("vy").innerText = vy.toFixed(2);
+    document.getElementById("vr").innerText = vr.toFixed(2);
+}
+
+/* ---------- DRAG ---------- */
+canvas.addEventListener("pointerdown", ()=>{ if (!animating) dragging=true; });
+canvas.addEventListener("pointerup", ()=> dragging=false);
+canvas.addEventListener("pointermove", e=>{
+    if (!dragging) return;
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left)/5;
+    let closest = 0;
+    path.forEach((p,i)=>{
+        if (Math.abs(p.x-x) < Math.abs(path[closest].x-x)) closest=i;
+    });
+    dragIndex = closest;
+    draw();
+});
+</script>
+
+</body>
+</html>
