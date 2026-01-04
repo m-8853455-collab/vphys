@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Spring–Mass Work–Energy Simulator | VPhys</title>
+<title>Work–Energy Problem Solver | VPhys</title>
 
 <style>
 body {
@@ -27,217 +27,174 @@ label {
   font-weight: bold;
 }
 input, select, button {
-  padding: 5px;
   margin: 5px 0;
+  padding: 5px;
 }
-canvas {
-  border: 1px solid black;
-  display: block;
-  margin: 10px auto;
-}
-.energy-bar {
-  height: 18px;
-  background: #ddd;
-  margin: 6px 0;
-}
-.fill {
-  height: 100%;
-}
-.hint {
-  background: #f1f5ff;
+.box {
+  background: #f5f7ff;
   padding: 10px;
   border-left: 4px solid #1e3a8a;
 }
+.correct { color: green; }
+.wrong { color: red; }
 </style>
 </head>
 
 <body>
 
 <header>
-<h1>Spring–Mass Work–Energy Simulator</h1>
-<p>VPhys – The Virtual Physics Lab</p>
+<h1>Work–Energy Theorem Problem Solver</h1>
+<p>VPhys – Learn how to THINK, not just calculate</p>
 </header>
 
 <section>
-<h2>Interactive Controls</h2>
+<h2>1️⃣ Choose Problem Type</h2>
+<select id="problem" onchange="updateProblem()">
+  <option value="">-- Select --</option>
+  <option value="incline">Inclined Plane with Friction</option>
+  <option value="spring">Falling Object + Spring</option>
+  <option value="pulley">Two Masses + Pulley</option>
+</select>
+</section>
 
+<section id="inputs" style="display:none;">
+<h2>2️⃣ Enter Given Values</h2>
+
+<div id="inclineInputs">
 <label>Mass (kg)</label><br>
-<input type="number" id="m" value="1" step="0.1"><br>
+<input id="m" type="number" value="20"><br>
 
-<label>Spring Constant k (N/m)</label><br>
-<input type="number" id="k" value="10"><br>
+<label>Angle θ (degrees)</label><br>
+<input id="theta" type="number" value="25"><br>
 
-<label>Initial Displacement x₀ (m)</label><br>
-<input type="number" id="x0" value="0.2" step="0.05"><br>
+<label>Distance s (m)</label><br>
+<input id="s" type="number" value="3.8"><br>
 
-<label>Damping Coefficient b</label><br>
-<input type="number" id="b" value="0" step="0.05"><br>
+<label>Applied Force F (N)</label><br>
+<input id="F" type="number" value="250"><br>
 
-<label>Gravity</label><br>
-<select id="g">
-  <option value="9.8">Earth (9.8 m/s²)</option>
-  <option value="1.62">Moon (1.62 m/s²)</option>
-</select><br><br>
-
-<button onclick="resetSim()">Reset Simulation</button>
-<button onclick="toggleEnergy()">Toggle Energy Bars</button>
-</section>
-
-<section>
-<h2>Spring Oscillation Animation</h2>
-<canvas id="simCanvas" width="600" height="160"></canvas>
-</section>
-
-<section id="energySection">
-<h2>Energy Visualization</h2>
-
-<label>Kinetic Energy</label>
-<div class="energy-bar"><div id="keBar" class="fill" style="background:red;"></div></div>
-
-<label>Potential Energy</label>
-<div class="energy-bar"><div id="peBar" class="fill" style="background:blue;"></div></div>
-
-<label>Total Energy</label>
-<div class="energy-bar"><div id="teBar" class="fill" style="background:green;"></div></div>
-</section>
-
-<section>
-<h2>Numerical Feedback</h2>
-<p id="values"></p>
-<p id="maxValues"></p>
-<p id="periodInfo"></p>
-</section>
-
-<section>
-<h2>Displacement vs Time</h2>
-<canvas id="graphCanvas" width="600" height="200"></canvas>
-</section>
-
-<section>
-<h2>Learning Hint</h2>
-<div class="hint">
-<p>
-• When displacement is maximum, <strong>KE = 0</strong> and <strong>PE is maximum</strong>.<br>
-• At equilibrium, <strong>PE is minimum</strong> and <strong>KE is maximum</strong>.<br>
-• With no damping, <strong>Total Energy remains constant</strong> (Work–Energy Theorem).
-</p>
+<label>Coefficient of friction μ</label><br>
+<input id="mu" type="number" value="0.3"><br>
 </div>
+
+<div id="springInputs">
+<label>Mass (kg)</label><br>
+<input id="ms" type="number" value="2"><br>
+
+<label>Drop height h (m)</label><br>
+<input id="h" type="number" value="0.3"><br>
+
+<label>Spring constant k (N/m)</label><br>
+<input id="k" type="number" value="2000"><br>
+</div>
+
+<div id="pulleyInputs">
+<label>Mass A (kg)</label><br>
+<input id="m1" type="number" value="1"><br>
+
+<label>Mass B (kg)</label><br>
+<input id="m2" type="number" value="2"><br>
+
+<label>Distance moved (m)</label><br>
+<input id="d" type="number" value="0.5"><br>
+
+<label>Final speed (m/s)</label><br>
+<input id="v" type="number" value="2"><br>
+</div>
+
+<button onclick="solve()">Solve Step-by-Step</button>
+</section>
+
+<section id="solution" style="display:none;">
+<h2>3️⃣ Step-by-Step Solution</h2>
+<div id="steps" class="box"></div>
 </section>
 
 <footer>
-<p>© VPhys</p>
+<p>© VPhys – Work–Energy Mastery</p>
 </footer>
 
 <script>
-let sim = document.getElementById("simCanvas").getContext("2d");
-let graph = document.getElementById("graphCanvas").getContext("2d");
+function updateProblem() {
+  document.getElementById("inputs").style.display = "block";
+  document.getElementById("solution").style.display = "none";
 
-let m, k, b, g;
-let x, v, a;
-let dt = 0.016;
-let t = 0;
-let showEnergy = true;
+  document.getElementById("inclineInputs").style.display = "none";
+  document.getElementById("springInputs").style.display = "none";
+  document.getElementById("pulleyInputs").style.display = "none";
 
-let xData = [];
-let maxKE = 0, maxPE = 0;
-
-function resetSim() {
-  m = +mInput.value;
-  k = +kInput.value;
-  b = +bInput.value;
-  g = +gInput.value;
-
-  x = +x0Input.value;
-  v = 0;
-  t = 0;
-  xData = [];
-  maxKE = maxPE = 0;
+  let p = document.getElementById("problem").value;
+  if (p === "incline") document.getElementById("inclineInputs").style.display = "block";
+  if (p === "spring") document.getElementById("springInputs").style.display = "block";
+  if (p === "pulley") document.getElementById("pulleyInputs").style.display = "block";
 }
 
-function toggleEnergy() {
-  showEnergy = !showEnergy;
-  document.getElementById("energySection").style.display =
-    showEnergy ? "block" : "none";
+function solve() {
+  let p = document.getElementById("problem").value;
+  let g = 9.8;
+  let steps = "";
+
+  if (p === "incline") {
+    let m = +m.value;
+    let theta = theta.value * Math.PI/180;
+    let s = +s.value;
+    let F = +F.value;
+    let mu = +mu.value;
+
+    let N = m * g * Math.cos(theta);
+    let fk = mu * N;
+
+    let WF = F * s;
+    let Wg = -m * g * s * Math.sin(theta);
+    let Wf = -fk * s;
+
+    let Wtotal = WF + Wg + Wf;
+
+    steps += `✔ Forces doing work: Applied force, gravity, friction<br><br>`;
+    steps += `W<sub>F</sub> = ${WF.toFixed(2)} J (positive)<br>`;
+    steps += `W<sub>g</sub> = ${Wg.toFixed(2)} J (negative)<br>`;
+    steps += `W<sub>f</sub> = ${Wf.toFixed(2)} J (negative)<br><br>`;
+    steps += `<b>Total Work = ${Wtotal.toFixed(2)} J</b><br>`;
+    steps += `By Work–Energy Theorem: W = ΔKE`;
+
+  }
+
+  if (p === "spring") {
+    let m = +ms.value;
+    let h = +h.value;
+    let k = +k.value;
+
+    let v = Math.sqrt(2 * g * h);
+    let x = Math.sqrt((m * g * (h)) * 2 / k);
+
+    steps += `Initial KE = 0<br>`;
+    steps += `Just before spring: KE = mgh<br>`;
+    steps += `mgh = ½kx²<br><br>`;
+    steps += `Compression x = ${x.toFixed(3)} m`;
+
+  }
+
+  if (p === "pulley") {
+    let m1 = +m1.value;
+    let m2 = +m2.value;
+    let d = +d.value;
+    let v = +v.value;
+
+    let deltaKE = 0.5 * (m1 + m2) * v * v;
+    let deltaPE = m2 * g * d;
+
+    let Wf = deltaKE - deltaPE;
+
+    steps += `Change in KE = ${deltaKE.toFixed(2)} J<br>`;
+    steps += `Change in PE = ${deltaPE.toFixed(2)} J<br><br>`;
+    steps += `<b>Work done by friction = ${Wf.toFixed(2)} J</b>`;
+
+  }
+
+  document.getElementById("solution").style.display = "block";
+  document.getElementById("steps").innerHTML = steps;
 }
-
-function update() {
-  let Fs = -k * x;
-  let Fd = -b * v;
-  a = (Fs + Fd) / m;
-
-  v += a * dt;
-  x += v * dt;
-  t += dt;
-
-  let KE = 0.5 * m * v * v;
-  let PE = 0.5 * k * x * x;
-  let TE = KE + PE;
-
-  maxKE = Math.max(maxKE, KE);
-  maxPE = Math.max(maxPE, PE);
-
-  drawSpring(x);
-  drawEnergy(KE, PE, TE);
-  drawGraph(x);
-
-  values.innerHTML =
-    `x = ${x.toFixed(3)} m | v = ${v.toFixed(3)} m/s<br>
-     KE = ${KE.toFixed(3)} J | PE = ${PE.toFixed(3)} J | Total = ${TE.toFixed(3)} J`;
-
-  maxValues.innerHTML =
-    `Max KE = ${maxKE.toFixed(3)} J | Max PE = ${maxPE.toFixed(3)} J`;
-
-  let T = 2 * Math.PI * Math.sqrt(m / k);
-  periodInfo.innerHTML =
-    `Period = ${T.toFixed(2)} s | Frequency = ${(1/T).toFixed(2)} Hz`;
-
-  requestAnimationFrame(update);
-}
-
-function drawSpring(x) {
-  sim.clearRect(0, 0, 600, 160);
-  let pos = 120 + x * 300;
-  sim.beginPath();
-  sim.moveTo(20, 80);
-  sim.lineTo(pos, 80);
-  sim.stroke();
-  sim.fillStyle = "#1e3a8a";
-  sim.fillRect(pos, 60, 40, 40);
-}
-
-function drawEnergy(KE, PE, TE) {
-  let scale = Math.max(TE, 0.001);
-  keBar.style.width = (KE / scale * 100) + "%";
-  peBar.style.width = (PE / scale * 100) + "%";
-  teBar.style.width = "100%";
-}
-
-function drawGraph(x) {
-  xData.push(x);
-  if (xData.length > 300) xData.shift();
-  graph.clearRect(0, 0, 600, 200);
-  graph.beginPath();
-  xData.forEach((y, i) => {
-    let px = i * 2;
-    let py = 100 - y * 200;
-    i === 0 ? graph.moveTo(px, py) : graph.lineTo(px, py);
-  });
-  graph.stroke();
-}
-
-let mInput = document.getElementById("m");
-let kInput = document.getElementById("k");
-let bInput = document.getElementById("b");
-let x0Input = document.getElementById("x0");
-let gInput = document.getElementById("g");
-let values = document.getElementById("values");
-let maxValues = document.getElementById("maxValues");
-let periodInfo = document.getElementById("periodInfo");
-
-resetSim();
-update();
 </script>
 
 </body>
 </html>
-
