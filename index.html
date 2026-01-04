@@ -1,1 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>VPhys – The Virtual Physics Lab</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f6f8;
+        }
+        header {
+            background-color: #1e3a8a;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        section {
+            background: white;
+            margin: 20px;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        h2 {
+            color: #1e3a8a;
+        }
+        button {
+            padding: 10px 15px;
+            margin: 5px;
+            background-color: #1e3a8a;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #16307a;
+        }
+        footer {
+            background-color: #1e3a8a;
+            color: white;
+            text-align: center;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
 
+<header>
+    <h1>VPhys</h1>
+    <p>The Virtual Physics Lab</p>
+</header>
+
+<section>
+    <h2>About VPhys</h2>
+    <p>
+        VPhys is an interactive virtual physics lab designed to help students understand
+        physics concepts through simulations, experimentation, and real-time feedback.
+    </p>
+</section>
+
+<section>
+    <h2>Explore Physics Topics</h2>
+    <p>Click a topic to learn more:</p>
+
+    <button onclick="showTopic('motion')">Motion</button>
+    <button onclick="showTopic('force')">Force</button>
+    <button onclick="showTopic('gravity')">Gravity</button>
+    <button onclick="showTopic('electricity')">Electricity</button>
+
+    <p id="topicInfo" style="margin-top:15px; font-weight:bold;"></p>
+</section>
+
+<section>
+    <h2>Why Choose VPhys?</h2>
+    <ul>
+        <li>Interactive and visual learning</li>
+        <li>Improves conceptual understanding</li>
+        <li>Reduces physics anxiety</li>
+        <li>Student-centred learning approach</li>
+    </ul>
+</section>
+
+<section>
+    <h2>Contact Us</h2>
+    <p>Group Name: VPhys</p>
+    <p>Email: vphys@gmail.com</p>
+</section>
+
+<footer>
+    <p>&copy; 2026 VPhys – The Virtual Physics Lab</p>
+</footer>
+
+<script>
