@@ -216,17 +216,6 @@ canvas.addEventListener("pointermove", e=>{
   draw();
 });
 
-/* ---------- WORK–ENERGY ---------- */
-function calculateWorkEnergy(){
-  const F=+weForce.value, s=+weDisplacement.value;
-  const th=+weAngle.value*Math.PI/180;
-  const u=+weU.value, m=+weMass.value;
-  const W=F*s*Math.cos(th);
-  const KEi=0.5*m*u*u;
-  weWork.textContent=W.toFixed(2);
-  weKEi.textContent=KEi.toFixed(2);
-  weKEf.textContent=(KEi+W).toFixed(2);
-}
 </script>
 
 </body>
